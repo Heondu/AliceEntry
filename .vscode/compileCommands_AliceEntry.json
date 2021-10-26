@@ -1,0 +1,77 @@
+[
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AEGameMode.cpp",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AEGameMode.h",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AEPawn.cpp",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AEPawn.h",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AEPlayerController.cpp",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AEPlayerController.h",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AliceEntry.Build.cs",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AliceEntry.cpp",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AliceEntry.h",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AliceEntryCharacter.cpp",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AliceEntryCharacter.h",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AliceEntryGameMode.cpp",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\AliceEntryGameMode.h",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\TEST.cpp",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "D:\\\\Unreal Projects\\\\AliceEntry\\\\Source\\\\AliceEntry\\\\TEST.h",
+		"command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\VC\\Tools\\MSVC\\14.30.30528\\bin\\HostX64\\x64\\cl.exe @\"D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry\\AliceEntry.210.rsp\"",
+		"directory": "C:\\Program Files\\Epic Games\\UE_4.27\\Engine\\Source"
+	}
+]

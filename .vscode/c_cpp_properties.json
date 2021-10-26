@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "AliceEntryEditor Editor Win64 Development (AliceEntry)",
+            "intelliSenseMode": "msvc-x64",
+            "compileCommands": "D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_AliceEntry.json",
+            "cStandard": "c17",
+            "cppStandard": "c++17"
+        },
+        {
+            "name": "Win32",
+            "intelliSenseMode": "msvc-x64",
+            "compileCommands": "D:\\Unreal Projects\\AliceEntry\\.vscode\\compileCommands_Default.json",
+            "cStandard": "c17",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
