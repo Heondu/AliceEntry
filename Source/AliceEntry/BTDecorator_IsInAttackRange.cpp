@@ -3,7 +3,7 @@
 
 #include "BTDecorator_IsInAttackRange.h"
 #include "AEAIController.h"
-#include "AECharacter.h"
+#include "AEPlayerCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 UBTDecorator_IsInAttackRange::UBTDecorator_IsInAttackRange()
@@ -18,7 +18,7 @@ bool UBTDecorator_IsInAttackRange::CalculateRawConditionValue(UBehaviorTreeCompo
 	APawn* ControllingPawn = OwnerComp.GetAIOwner()->GetPawn();
 	if (nullptr == ControllingPawn) return false;
 
-	AAECharacter* Target = Cast<AAECharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(AAEAIController::TargetKey));
+	AAEPlayerCharacter* Target = Cast<AAEPlayerCharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(AAEAIController::TargetKey));
 	if (nullptr == Target) return false;
 
 	bResult = (Target->GetDistanceTo(ControllingPawn) <= 200.0f);

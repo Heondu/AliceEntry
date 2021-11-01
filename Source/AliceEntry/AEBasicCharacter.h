@@ -27,7 +27,7 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void Attack();
+	virtual void Attack();
 	FOnAttackEndDelegate OnAttackEnd;
 
 	UFUNCTION()
@@ -40,35 +40,44 @@ public:
 
 protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-	bool IsAttacking;
+		bool IsAttacking;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-	bool CanNextCombo;
+		bool CanNextCombo;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-	bool IsComboInputOn;
+		bool IsComboInputOn;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-	int32 CurrentCombo;
+		int32 CurrentCombo;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-	int32 MaxCombo;
+		int32 MaxCombo;
 
 	UPROPERTY()
-	class UAEAnimInstance* AnimInstance;
+		class UAEAnimInstance* AnimInstance;
 
 	//클래스나 블루프린트를 받아오려면 TSubclassOf로 클래스를 명시해야 한다.
 	UPROPERTY(EditDefaultsOnly, Category = Weapon)
-	TSubclassOf<class AAEWeapon> Weapon;
+		TSubclassOf<class AAEWeapon> Weapon;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-	float AttackRange;
+		float AttackRange;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-	float AttackRadius;
+		float AttackRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State, Meta = (AllowPrivateAccess = true))
-	float DeadTimer;
+		float DeadTimer;
 
 	FTimerHandle DeadTimerHandle = { };
+
+	UPROPERTY(EditDefaultsOnly)
+		float MaxHealth = 100;
+
+	UPROPERTY(VisibleAnywhere)
+		float Health;
+
+	UPROPERTY(EditAnywhere)
+		float Damage = 10;
 };

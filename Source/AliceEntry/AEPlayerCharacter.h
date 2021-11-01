@@ -4,22 +4,19 @@
 
 #include "AliceEntry.h"
 #include "AEBasicCharacter.h"
-#include "Engine/DataTable.h"
-#include "AECharacter.generated.h"
-
-/**
- * 
- */
+#include "GameFramework/Character.h"
+#include "AEPlayerCharacter.generated.h"
 
 UCLASS()
-class ALICEENTRY_API AAECharacter : public AAEBasicCharacter
+class ALICEENTRY_API AAEPlayerCharacter : public AAEBasicCharacter
 {
 	GENERATED_BODY()
 
 public:
-	AAECharacter();
+	AAEPlayerCharacter();
 
-	virtual void PostInitializeComponents() override;
+	UFUNCTION(BlueprintPure)
+	float GetHealthPercent() const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Camera)
 	class USpringArmComponent* BoomArm;
@@ -29,11 +26,12 @@ public:
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	void MoveForward(float Value);
-	void MoveRight(float Value);
+	virtual void MoveForward(float AxisValue);
+	virtual void MoveRight(float AxisValue);
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
 
 	float TurnRate;
 	float LookRate;
+
 };

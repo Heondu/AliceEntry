@@ -3,7 +3,7 @@
 
 #include "BTService_Detect.h"
 #include "AEAIController.h"
-#include "AECharacter.h"
+#include "AEPlayerCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "DrawDebugHelpers.h"
 
@@ -40,14 +40,14 @@ void UBTService_Detect::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 	{
 		for (FOverlapResult OverlapResult : OverlapResults)
 		{
-			AAECharacter* AECharacter = Cast<AAECharacter>(OverlapResult.GetActor());
-			if (AECharacter && AECharacter->GetController()->IsPlayerController())
+			AAEPlayerCharacter* Target = Cast<AAEPlayerCharacter>(OverlapResult.GetActor());
+			if (Target && Target->GetController()->IsPlayerController())
 			{
-				OwnerComp.GetBlackboardComponent()->SetValueAsObject(AAEAIController::TargetKey, AECharacter);
+				OwnerComp.GetBlackboardComponent()->SetValueAsObject(AAEAIController::TargetKey, Target);
 				DrawDebugSphere(World, Center, DetectRadius, 16, FColor::Green, false, 0.2f);
 
-				DrawDebugPoint(World, AECharacter->GetActorLocation(), 10.0f, FColor::Blue, false, 0.2f);
-				DrawDebugLine(World, ControllingPawn->GetActorLocation(), AECharacter->GetActorLocation(), FColor::Blue, false, 0.2f);
+				DrawDebugPoint(World, Target->GetActorLocation(), 10.0f, FColor::Blue, false, 0.2f);
+				DrawDebugLine(World, ControllingPawn->GetActorLocation(), Target->GetActorLocation(), FColor::Blue, false, 0.2f);
 				return;
 
 			}

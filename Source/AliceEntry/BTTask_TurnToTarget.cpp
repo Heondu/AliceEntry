@@ -3,7 +3,7 @@
 
 #include "BTTask_TurnToTarget.h"
 #include "AEAIController.h"
-#include "AECharacter.h"
+#include "AEPlayerCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 UBTTask_TurnToTarget::UBTTask_TurnToTarget()
@@ -15,18 +15,18 @@ EBTNodeResult::Type UBTTask_TurnToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 {
 	EBTNodeResult::Type Result = Super::ExecuteTask(OwnerComp, NodeMemory);
 
-	AAEBasicCharacter* AEBasicCharacter = Cast<AAEBasicCharacter>(OwnerComp.GetAIOwner()->GetPawn());
-	if (nullptr == AEBasicCharacter)
+	APawn* Pawn = Cast<APawn>(OwnerComp.GetAIOwner()->GetPawn());
+	if (nullptr == Pawn)
 		return EBTNodeResult::Failed;
 
-	AAEBasicCharacter* Target = Cast<AAEBasicCharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(AAEAIController::TargetKey));
+	AAEPlayerCharacter* Target = Cast<AAEPlayerCharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(AAEAIController::TargetKey));
 	if (nullptr == Target)
 		return EBTNodeResult::Failed;
 
-	FVector LookVector = Target->GetActorLocation() - AEBasicCharacter->GetActorLocation();
+	FVector LookVector = Target->GetActorLocation() - Pawn->GetActorLocation();
 	LookVector.Z = 0.0f;
 	FRotator TargetRot = FRotationMatrix::MakeFromX(LookVector).Rotator();
-	AEBasicCharacter->SetActorRotation(FMath::RInterpTo(AEBasicCharacter->GetActorRotation(), TargetRot, GetWorld()->GetDeltaSeconds(), 2.0f));
+	Pawn->SetActorRotation(FMath::RInterpTo(Pawn->GetActorRotation(), TargetRot, GetWorld()->GetDeltaSeconds(), 2.0f));
 
 	return EBTNodeResult::Succeeded;
 }

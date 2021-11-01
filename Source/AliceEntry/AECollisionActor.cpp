@@ -2,7 +2,6 @@
 
 
 #include "AECollisionActor.h"
-#include "AECharacter.h"
 
 // Sets default values
 AAECollisionActor::AAECollisionActor()

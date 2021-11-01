@@ -11,7 +11,6 @@ AAEBasicCharacter::AAEBasicCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	IsAttacking = false;
-	MaxCombo = 4;
 	AttackEndComboState();
 
 	DeadTimer = 5.0f;
@@ -20,6 +19,8 @@ AAEBasicCharacter::AAEBasicCharacter()
 void AAEBasicCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Health = MaxHealth;
 
 	FName WeaponSocket(TEXT("hand_rSocket"));
 	AAEWeapon* NewWeapon = GetWorld()->SpawnActor<AAEWeapon>(Weapon);
@@ -52,7 +53,7 @@ void AAEBasicCharacter::PostInitializeComponents()
 			AttackStartComboState();
 			AnimInstance->JumpToAttackMontageSection(CurrentCombo);
 		}
-	});
+		});
 }
 
 void AAEBasicCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -63,8 +64,6 @@ void AAEBasicCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 void AAEBasicCharacter::Attack()
 {
-	LOG_S(Warning);
-
 	if (IsAttacking)
 	{
 		CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
@@ -86,7 +85,7 @@ void AAEBasicCharacter::Attack()
 void AAEBasicCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	CHECK(IsAttacking);
-	CHECK(CurrentCombo > 0)
+	CHECK(CurrentCombo > 0);
 	IsAttacking = false;
 	AttackEndComboState();
 	OnAttackEnd.Broadcast();
@@ -109,13 +108,17 @@ void AAEBasicCharacter::AttackEndComboState()
 
 float AAEBasicCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	if (FinalDamage > 0.0f)
+	float DamageApplied = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	DamageApplied = FMath::Min(Health, DamageApplied);
+	Health -= DamageApplied;
+	LOG(Warning, TEXT("Health left %f"), Health);
+
+	if (Health <= 0.0f)
 	{
 		AnimInstance->SetDeadAnim();
 		SetActorEnableCollision(false);
 	}
-	return FinalDamage;
+	return DamageApplied;
 }
 
 void AAEBasicCharacter::AttackCheck()
@@ -159,7 +162,7 @@ void AAEBasicCharacter::AttackCheck()
 			LOG(Warning, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
 
 			FDamageEvent DamageEvent;
-			HitResult.Actor->TakeDamage(50.0f, DamageEvent, GetController(), this);
+			HitResult.Actor->TakeDamage(Damage, DamageEvent, GetController(), this);
 		}
 	}
 }

@@ -2,15 +2,43 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "AEBasicCharacter.h"
+#include "AliceEntry.h"
+#include "AEPlayerCharacter.h"
 #include "AEAliceCharacter.generated.h"
 
 /**
  * 
  */
+
+class AAEGun;
+
 UCLASS()
-class ALICEENTRY_API AAEAliceCharacter : public AAEBasicCharacter
+class ALICEENTRY_API AAEAliceCharacter : public AAEPlayerCharacter
 {
 	GENERATED_BODY()
+
+public:
+	AAEAliceCharacter();
+
+	virtual void BeginPlay();
+	virtual void PostInitializeComponents() override;
+
+protected:
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	virtual void Attack() override;
+	void Shoot();
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AAEGun> GunClass;
+
+	UPROPERTY()
+	AAEGun* GunL;
+
+	UPROPERTY()
+	AAEGun* GunR;
+
+	UPROPERTY(EditAnywhere)
+	float MaxRange = 1000;
 };

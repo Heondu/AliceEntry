@@ -3,7 +3,7 @@
 
 #include "BTTask_Attack.h"
 #include "AEAIController.h"
-#include "AEBasicCharacter.h"
+#include "AEEnemy.h"
 
 UBTTask_Attack::UBTTask_Attack()
 {
@@ -15,13 +15,13 @@ EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 {
 	EBTNodeResult::Type Result = Super::ExecuteTask(OwnerComp, NodeMemory);
 
-	AAEBasicCharacter* AEBasicCharacter = Cast<AAEBasicCharacter>(OwnerComp.GetAIOwner()->GetPawn());
-	if (nullptr == AEBasicCharacter)
+	AAEEnemy* Enemy = Cast<AAEEnemy>(OwnerComp.GetAIOwner()->GetPawn());
+	if (nullptr == Enemy)
 		return EBTNodeResult::Failed;
 
-	AEBasicCharacter->Attack();
+	Enemy->Attack();
 	IsAttacking = true;
-	AEBasicCharacter->OnAttackEnd.AddLambda([this]() -> void {
+	Enemy->OnAttackEnd.AddLambda([this]() -> void {
 		IsAttacking = false;
 	});
 
