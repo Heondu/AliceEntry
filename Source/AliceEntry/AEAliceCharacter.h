@@ -23,9 +23,6 @@ public:
 	virtual void BeginPlay();
 	virtual void PostInitializeComponents() override;
 
-protected:
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 private:
 	virtual void Attack() override;
 	void Shoot();

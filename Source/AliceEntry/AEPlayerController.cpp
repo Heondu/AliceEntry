@@ -17,6 +17,13 @@ void AAEPlayerController::ChangeCharacter()
 {
 	FVector Location = GetPawn()->GetActorLocation();
 	FRotator Rotation = GetPawn()->GetActorRotation();
+	FRotator NewControlRotation = GetControlRotation();
+
+	TArray<AActor*> Actors;
+	GetPawn()->GetAttachedActors(Actors);
+	for (AActor* Actor : Actors)
+		Actor->Destroy();
+	GetPawn()->Destroy();
 
 	AAEPlayerCharacter* NewCharacter;
 
@@ -28,16 +35,6 @@ void AAEPlayerController::ChangeCharacter()
 	{
 		NewCharacter = GetWorld()->SpawnActor<AAEBunnyCharacter>(BunnyClass, Location, Rotation);
 	}
-	FRotator NewControlRotation = GetControlRotation();
-
-	TArray<AActor*> Actors;
-	GetPawn()->GetAttachedActors(Actors);
-	
-	for (AActor* Actor : Actors)
-	{
-		Actor->Destroy();
-	}
-	GetPawn()->Destroy();
 	
 	CHECK(nullptr != NewCharacter);
 	

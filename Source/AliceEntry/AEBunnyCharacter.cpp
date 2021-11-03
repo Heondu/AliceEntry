@@ -32,12 +32,12 @@ void AAEBunnyCharacter::MoveForward(float AxisValue)
 {
 	if (IsAttacking) return;
 
-	AddMovementInput(GetActorForwardVector() * AxisValue);
+	AAEPlayerCharacter::MoveForward(AxisValue);
 }
 
 void AAEBunnyCharacter::MoveRight(float AxisValue)
 {
 	if (IsAttacking) return;
 
-	AddMovementInput(GetActorRightVector() * AxisValue);
+	AAEPlayerCharacter::MoveRight(AxisValue);
 }

@@ -26,19 +26,13 @@ void AAEAliceCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
+	CHECK(nullptr != AnimInstance);
 	AnimInstance->OnNextAttackCheck.AddLambda([this]() -> void {
 		if (IsComboInputOn)
 		{
 			Shoot();
 		}
 		});
-}
-
-void AAEAliceCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	PlayerInputComponent->BindAction("Attack", EInputEvent::IE_Pressed, this, &AAEBasicCharacter::Attack);
 }
 
 void AAEAliceCharacter::Attack()

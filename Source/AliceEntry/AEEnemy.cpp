@@ -67,6 +67,10 @@ float AAEEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 		AIController->StopAI();
 
 		GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda([this]() -> void {
+			TArray<AActor*> Actors;
+			GetAttachedActors(Actors);
+			for (AActor* Actor : Actors)
+				Actor->Destroy();
 			Destroy();
 			}), DeadTimer, false);
 	}

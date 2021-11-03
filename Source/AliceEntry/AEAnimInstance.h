@@ -19,6 +19,7 @@ class ALICEENTRY_API UAEAnimInstance : public UAnimInstance
 
 public:
 	UAEAnimInstance();
+	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 	void PlayAttackMontage();
@@ -48,4 +49,19 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
 	bool IsDead;
+
+	UPROPERTY()
+	class AAEPlayerCharacter* PlayerRef;
+
+	UFUNCTION()
+	void AnimNotify_StartMovement();
+
+	UFUNCTION()
+	void AnimNotify_RopeAppear();
+
+	UFUNCTION()
+	void AnimNotify_RopeDisappear();
+
+	UFUNCTION()
+	void AnimNotify_AnimEnd();
 };

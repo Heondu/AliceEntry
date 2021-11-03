@@ -2,12 +2,18 @@
 
 
 #include "AEAnimInstance.h"
+#include "AEPlayerCharacter.h"
 
 UAEAnimInstance::UAEAnimInstance()
 {
 	CurrentPawnSpeed = 0.0f;
 	IsInAir = false;
 	IsDead = false;
+}
+
+void UAEAnimInstance::NativeBeginPlay()
+{
+	PlayerRef = Cast<AAEPlayerCharacter>(TryGetPawnOwner());
 }
 
 void UAEAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -55,4 +61,24 @@ FName UAEAnimInstance::GetAttackMontageSectionName(int32 Section)
 {
 	CHECK(FMath::IsWithinInclusive<int32>(Section, 1, 4), NAME_None);
 	return FName(*FString::Printf(TEXT("Attack%d"), Section));
+}
+
+void UAEAnimInstance::AnimNotify_StartMovement()
+{
+	PlayerRef->StartGrapplingMovement();
+}
+
+void UAEAnimInstance::AnimNotify_RopeAppear()
+{
+	PlayerRef->RopeVisibility(true);
+}
+
+void UAEAnimInstance::AnimNotify_RopeDisappear()
+{
+	PlayerRef->RopeVisibility(false);
+}
+
+void UAEAnimInstance::AnimNotify_AnimEnd()
+{
+	PlayerRef->ResetMovement();
 }
