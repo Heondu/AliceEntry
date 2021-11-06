@@ -29,9 +29,20 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-	virtual void Attack() override;
+	void Attack();
 
 private:
+	void AttackCheck();
+
 	UPROPERTY(EditDefaultsOnly)
 	TArray<UAnimMontage*> AttackMontages;
+
+	UPROPERTY()
+	class AAEAIController* AIController;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	float AttackRange;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	float AttackRadius;
 };

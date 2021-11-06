@@ -17,67 +17,37 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	void AttackCheck();
-
 public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void PostInitializeComponents() override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	virtual void Attack();
-
-	UFUNCTION()
-	void OnAttackMontageEnded();
-
-	void AttackStartComboState();
-	void AttackEndComboState();
-
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-		bool IsAttacking;
+	bool IsAttacking;
 
 protected:
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-		bool CanNextCombo;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-		bool IsComboInputOn;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-		int32 CurrentCombo;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-		int32 MaxCombo;
-
 	UPROPERTY()
-		class UAEAnimInstance* AnimInstance;
+	class UAEAnimInstance* AnimInstance;
 
 	//클래스나 블루프린트를 받아오려면 TSubclassOf로 클래스를 명시해야 한다.
 	UPROPERTY(EditDefaultsOnly, Category = Weapon)
-		TSubclassOf<class AAEWeapon> Weapon;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-		float AttackRange;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-		float AttackRadius;
+	TSubclassOf<class AAEWeapon> Weapon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State, Meta = (AllowPrivateAccess = true))
-		float DeadTimer;
+	float DeadTimer;
 
 	FTimerHandle DeadTimerHandle = { };
 
 	UPROPERTY(EditDefaultsOnly)
-		float MaxHealth = 100;
+	float MaxHealth = 100;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-		float Health;
+	float Health;
 
 	UPROPERTY(EditAnywhere)
-		float Damage = 10;
+	float Damage = 10;
 
-	UPROPERTY()
-		bool canMove;
+	UPROPERTY(VisibleAnywhere)
+	bool CanMove;
 };

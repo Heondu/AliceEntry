@@ -8,8 +8,10 @@
 
 DECLARE_MULTICAST_DELEGATE(FOnNextAttackCheckDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnAttackHitCheckDelegate);
-DECLARE_MULTICAST_DELEGATE(FOnHitAnimEndDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnAttackEndDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnHitEndDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnRollEndDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnSlideEndDelegate);
 
 /**
  * 
@@ -29,10 +31,18 @@ public:
 
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
 	FOnAttackHitCheckDelegate OnAttackHitCheck;
-	FOnHitAnimEndDelegate OnHitAnimEnd;
 	FOnAttackEndDelegate OnAttackEnd;
+	FOnHitEndDelegate OnHitEnd;
+	FOnRollEndDelegate OnRollEnd;
+	FOnSlideEndDelegate OnSlideEnd;
+
 	void SetDeadAnim() { IsDead = true; }
 	void PlayHitAnim();
+	void PlayRollAnim(bool bIsBack);
+	void PlaySlideAnim();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
+	bool IsDead;
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Anim, Meta = (AllowPrivateAccess = true))
@@ -47,6 +57,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* HitMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* RollMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* SlideMontage;
+
 	UFUNCTION()
 	void AnimNotify_AttackHitCheck();
 
@@ -54,9 +70,6 @@ private:
 	void AnimNotify_NextAttackCheck();
 
 	FName GetAttackMontageSectionName(int32 Section);
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
-	bool IsDead;
 
 	UPROPERTY()
 	class AAEPlayerCharacter* PlayerRef;
@@ -74,8 +87,14 @@ private:
 	void AnimNotify_AnimEnd();
 
 	UFUNCTION()
-	void AnimNotify_HitAnimEnd();
+	void AnimNotify_HitEnd();
 
 	UFUNCTION()
 	void AnimNotify_AttackEnd();
+
+	UFUNCTION()
+	void AnimNotify_RollEnd();
+
+	UFUNCTION()
+	void AnimNotify_SlideEnd();
 };

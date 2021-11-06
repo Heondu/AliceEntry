@@ -53,6 +53,25 @@ void UAEAnimInstance::PlayHitAnim()
 	Montage_Play(HitMontage, 1.0f);
 }
 
+void UAEAnimInstance::PlayRollAnim(bool bIsBack)
+{
+	CHECK(!IsDead);
+	if (Montage_IsPlaying(RollMontage)) return;
+
+	Montage_Play(RollMontage, 1.0f);
+	if (bIsBack)
+	{
+		Montage_JumpToSection(FName("Back"), RollMontage);
+	}
+}
+
+void UAEAnimInstance::PlaySlideAnim()
+{
+	CHECK(!IsDead);
+
+	Montage_Play(SlideMontage, 1.0f);
+}
+
 void UAEAnimInstance::AnimNotify_AttackHitCheck()
 {
 	OnAttackHitCheck.Broadcast();
@@ -89,12 +108,22 @@ void UAEAnimInstance::AnimNotify_AnimEnd()
 	PlayerRef->ResetMovement();
 }
 
-void UAEAnimInstance::AnimNotify_HitAnimEnd()
-{
-	OnHitAnimEnd.Broadcast();
-}
-
 void UAEAnimInstance::AnimNotify_AttackEnd()
 {
 	OnAttackEnd.Broadcast();
+}
+
+void UAEAnimInstance::AnimNotify_HitEnd()
+{
+	OnHitEnd.Broadcast();
+}
+
+void UAEAnimInstance::AnimNotify_RollEnd()
+{
+	OnRollEnd.Broadcast();
+}
+
+void UAEAnimInstance::AnimNotify_SlideEnd()
+{
+	OnSlideEnd.Broadcast();
 }

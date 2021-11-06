@@ -4,6 +4,7 @@
 #include "AEEnemy.h"
 #include "AEAIController.h"
 #include "AEAnimInstance.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 AAEEnemy::AAEEnemy()
@@ -17,6 +18,18 @@ AAEEnemy::AAEEnemy()
 void AAEEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AIController = Cast<AAEAIController>(GetController());
+
+	CHECK(nullptr != AnimInstance);
+	AnimInstance->OnAttackHitCheck.AddUObject(this, &AAEEnemy::AttackCheck);
+	AnimInstance->OnAttackEnd.AddLambda([this]() -> void {
+		IsAttacking = false;
+		});
+	AnimInstance->OnHitEnd.AddLambda([this]() -> void {
+		if (!AnimInstance->IsDead)
+			AIController->RunAI();
+		});
 
 	//AIController는 블루프린트나 인스펙터의 Pawn 카테고리에서 설정 가능
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
@@ -32,14 +45,11 @@ void AAEEnemy::BeginPlay()
 
 	AttackRange = 200.0f;
 	AttackRadius = 50.0f;
+	IsAttacking = false;
 
-	MaxCombo = 3;
-}
+	DeadTimer = 5.0f;
 
-void AAEEnemy::Attack()
-{
-	IsAttacking = true;
-	PlayAnimMontage(AttackMontages[FMath::RandRange(0, AttackMontages.Num() - 1)], 1.0f);
+	CanMove = true;
 }
 
 // Called every frame
@@ -52,16 +62,6 @@ void AAEEnemy::Tick(float DeltaTime)
 void AAEEnemy::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-
-	CHECK(nullptr != AnimInstance);
-	AnimInstance->OnAttackHitCheck.AddUObject(this, &AAEEnemy::AttackCheck);
-	AnimInstance->OnAttackEnd.AddLambda([this]() -> void {
-		IsAttacking = false;
-		});
-	AnimInstance->OnHitAnimEnd.AddLambda([this]() -> void {
-		AAEAIController* AIController = Cast<AAEAIController>(GetController());
-		AIController->RunAI();
-		});
 }
 
 // Called to bind functionality to input
@@ -71,15 +71,72 @@ void AAEEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
+void AAEEnemy::Attack()
+{
+	IsAttacking = true;
+	PlayAnimMontage(AttackMontages[FMath::RandRange(0, AttackMontages.Num() - 1)], 1.0f);
+}
+
+void AAEEnemy::AttackCheck()
+{
+	FHitResult HitResult;
+	FCollisionQueryParams Params(NAME_None, false, this);
+	bool bResult = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		GetActorLocation(),
+		GetActorLocation() + GetActorForwardVector() * AttackRange,
+		FQuat::Identity,
+		ECollisionChannel::ECC_GameTraceChannel3,
+		FCollisionShape::MakeSphere(AttackRadius),
+		Params
+	);
+
+#if ENABLE_DRAW_DEBUG
+	FVector TraceVec = GetActorForwardVector() * AttackRange;
+	FVector Center = GetActorLocation() + TraceVec * 0.5f;
+	float HalfHeight = AttackRange * 0.5f + AttackRadius;
+	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
+	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
+	float DebugLifeTime = 1.0f;
+
+	DrawDebugCapsule(
+		GetWorld(),
+		Center,
+		HalfHeight,
+		AttackRadius,
+		CapsuleRot,
+		DrawColor,
+		false,
+		DebugLifeTime
+	);
+#endif
+
+	if (bResult)
+	{
+		if (HitResult.Actor.IsValid())
+		{
+			LOG(Warning, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
+
+			FDamageEvent DamageEvent;
+			HitResult.Actor->TakeDamage(Damage, DamageEvent, GetController(), this);
+		}
+	}
+}
+
 float AAEEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float DamageApplied = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	DamageApplied = FMath::Min(Health, DamageApplied);
+	Health -= DamageApplied;
 
-	AAEAIController* AIController = Cast<AAEAIController>(GetController());
+	LOG(Warning, TEXT("Health left %f"), Health);
+
 	AIController->StopAI();
 
 	if (Health <= 0.0f)
 	{
+		AnimInstance->SetDeadAnim();
+		SetActorEnableCollision(false);
 		GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda([this]() -> void {
 			TArray<AActor*> Actors;
 			GetAttachedActors(Actors);
@@ -88,5 +145,12 @@ float AAEEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 			Destroy();
 			}), DeadTimer, false);
 	}
+	else
+	{
+		CanMove = false;
+		IsAttacking = false;
+		AnimInstance->PlayHitAnim();
+	}
+
 	return DamageApplied;
 }

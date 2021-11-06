@@ -8,6 +8,18 @@
 #include "GameFramework/Character.h"
 #include "AEPlayerCharacter.generated.h"
 
+UENUM()
+enum class ECharacterState
+{
+	Stopped	UMETA(DisplayName == "Stopped"),
+	Moving		UMETA(DisplayName == "Moving"),
+	Attacking	UMETA(DisplayName == "Attacking"),
+	Grappling	UMETA(DisplayName == "Grappling"),
+	Rolling		UMETA(DisplayName == "Rolling"),
+	Sliding		UMETA(DisplayName == "Sliding"),
+	Dead		UMETA(DisplayName == "Dead"),
+};
+
 UCLASS()
 class ALICEENTRY_API AAEPlayerCharacter : public AAEBasicCharacter
 {
@@ -40,6 +52,14 @@ public:
 	void RopeVisibility(bool bVisible);
 	void MoveRope();
 
+	UFUNCTION()
+	void OnAttackMontageEnded();
+
+	void AttackStartComboState();
+	void AttackEndComboState();
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
@@ -51,9 +71,33 @@ protected:
 	void LookUpAtRate(float Rate);
 	void Jump();
 	void Grapple();
+	virtual void Attack();
+	void Roll();
+	void Slide();
+	bool ShouldSlide();
+	float GetGroundAngle();
+
+	UPROPERTY(VisibleAnywhere)
+	TEnumAsByte<ECharacterState> EState;
 
 	float TurnRate;
 	float LookRate;
+	UPROPERTY()
+	FVector PreviousLocation = FVector::ZeroVector;
+	UPROPERTY()
+	bool IsSliding;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool CanNextCombo;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool IsComboInputOn;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	int32 CurrentCombo;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	int32 MaxCombo;
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = Grapple)

@@ -14,6 +14,14 @@ void AAEAliceCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	CHECK(nullptr != AnimInstance);
+	AnimInstance->OnNextAttackCheck.AddLambda([this]() -> void {
+		if (IsComboInputOn)
+		{
+			Shoot();
+		}
+		});
+
 	GunL = GetWorld()->SpawnActor<AAEGun>(GunClass);
 	GunR = GetWorld()->SpawnActor<AAEGun>(GunClass);
 	GunL->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("Hand_lSocket"));
@@ -25,19 +33,11 @@ void AAEAliceCharacter::BeginPlay()
 void AAEAliceCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-
-	CHECK(nullptr != AnimInstance);
-	AnimInstance->OnNextAttackCheck.AddLambda([this]() -> void {
-		if (IsComboInputOn)
-		{
-			Shoot();
-		}
-		});
 }
 
 void AAEAliceCharacter::Attack()
 {
-	if (!canMove) return;
+	if (!CanMove) return;
 
 	if (IsAttacking)
 	{
