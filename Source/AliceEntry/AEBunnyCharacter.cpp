@@ -6,6 +6,13 @@
 
 AAEBunnyCharacter::AAEBunnyCharacter()
 {
+
+}
+
+void AAEBunnyCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
 	AttackRange = 200.0f;
 	AttackRadius = 50.0f;
 

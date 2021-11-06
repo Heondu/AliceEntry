@@ -24,4 +24,7 @@ protected:
 
 private:
 	bool IsAttacking = false;
+
+	UPROPERTY()
+	class AAEEnemy* Enemy;
 };

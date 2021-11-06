@@ -6,8 +6,6 @@
 #include "GameFramework/Character.h"
 #include "AEBasicCharacter.generated.h"
 
-DECLARE_MULTICAST_DELEGATE(FOnAttackEndDelegate);
-
 UCLASS()
 class ALICEENTRY_API AAEBasicCharacter : public ACharacter
 {
@@ -28,20 +26,19 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void Attack();
-	FOnAttackEndDelegate OnAttackEnd;
 
 	UFUNCTION()
-	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	void OnAttackMontageEnded();
 
 	void AttackStartComboState();
 	void AttackEndComboState();
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
-protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 		bool IsAttacking;
 
+protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 		bool CanNextCombo;
 
@@ -75,9 +72,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 		float MaxHealth = 100;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 		float Health;
 
 	UPROPERTY(EditAnywhere)
 		float Damage = 10;
+
+	UPROPERTY()
+		bool canMove;
 };

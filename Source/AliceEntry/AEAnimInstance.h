@@ -8,6 +8,8 @@
 
 DECLARE_MULTICAST_DELEGATE(FOnNextAttackCheckDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnAttackHitCheckDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnHitAnimEndDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnAttackEndDelegate);
 
 /**
  * 
@@ -27,17 +29,23 @@ public:
 
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
 	FOnAttackHitCheckDelegate OnAttackHitCheck;
+	FOnHitAnimEndDelegate OnHitAnimEnd;
+	FOnAttackEndDelegate OnAttackEnd;
 	void SetDeadAnim() { IsDead = true; }
+	void PlayHitAnim();
 
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Anim, Meta = (AllowPrivateAccess = true))
 	float CurrentPawnSpeed;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Anim, Meta = (AllowPrivateAccess = true))
 	bool IsInAir;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack, Meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* AttackMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* HitMontage;
 
 	UFUNCTION()
 	void AnimNotify_AttackHitCheck();
@@ -64,4 +72,10 @@ private:
 
 	UFUNCTION()
 	void AnimNotify_AnimEnd();
+
+	UFUNCTION()
+	void AnimNotify_HitAnimEnd();
+
+	UFUNCTION()
+	void AnimNotify_AttackEnd();
 };

@@ -31,7 +31,7 @@ void UBTService_Detect::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 		OverlapResults,
 		Center,
 		FQuat::Identity,
-		ECollisionChannel::ECC_GameTraceChannel2,
+		ECollisionChannel::ECC_GameTraceChannel4,
 		FCollisionShape::MakeSphere(DetectRadius),
 		CollisionQueryParam
 	);

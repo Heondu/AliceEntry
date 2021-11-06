@@ -14,6 +14,8 @@ AAEBasicCharacter::AAEBasicCharacter()
 	AttackEndComboState();
 
 	DeadTimer = 5.0f;
+
+	canMove = true;
 }
 
 void AAEBasicCharacter::BeginPlay()
@@ -43,16 +45,8 @@ void AAEBasicCharacter::PostInitializeComponents()
 	AnimInstance = Cast<UAEAnimInstance>(GetMesh()->GetAnimInstance());
 	CHECK(nullptr != AnimInstance);
 
-	AnimInstance->OnMontageEnded.AddDynamic(this, &AAEBasicCharacter::OnAttackMontageEnded);
-
-	AnimInstance->OnNextAttackCheck.AddLambda([this]() -> void {
-		CanNextCombo = false;
-
-		if (IsComboInputOn)
-		{
-			AttackStartComboState();
-			AnimInstance->JumpToAttackMontageSection(CurrentCombo);
-		}
+	AnimInstance->OnHitAnimEnd.AddLambda([this]() -> void {
+		canMove = true;
 		});
 }
 
@@ -64,6 +58,8 @@ void AAEBasicCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 void AAEBasicCharacter::Attack()
 {
+	if (!canMove) return;
+
 	if (IsAttacking)
 	{
 		CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
@@ -82,13 +78,13 @@ void AAEBasicCharacter::Attack()
 	}
 }
 
-void AAEBasicCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+void AAEBasicCharacter::OnAttackMontageEnded()
 {
 	CHECK(IsAttacking);
 	CHECK(CurrentCombo > 0);
 	IsAttacking = false;
 	AttackEndComboState();
-	OnAttackEnd.Broadcast();
+	//OnAttackEnd.Broadcast();
 }
 
 void AAEBasicCharacter::AttackStartComboState()
@@ -111,12 +107,20 @@ float AAEBasicCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 	float DamageApplied = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	DamageApplied = FMath::Min(Health, DamageApplied);
 	Health -= DamageApplied;
+
 	LOG(Warning, TEXT("Health left %f"), Health);
 
 	if (Health <= 0.0f)
 	{
 		AnimInstance->SetDeadAnim();
 		SetActorEnableCollision(false);
+	}
+	else
+	{
+		canMove = false;
+		IsAttacking = false;
+		AttackEndComboState();
+		AnimInstance->PlayHitAnim();
 	}
 	return DamageApplied;
 }
@@ -130,7 +134,7 @@ void AAEBasicCharacter::AttackCheck()
 		GetActorLocation(),
 		GetActorLocation() + GetActorForwardVector() * AttackRange,
 		FQuat::Identity,
-		ECollisionChannel::ECC_EngineTraceChannel2,
+		ECollisionChannel::ECC_EngineTraceChannel4,
 		FCollisionShape::MakeSphere(AttackRadius),
 		Params
 	);

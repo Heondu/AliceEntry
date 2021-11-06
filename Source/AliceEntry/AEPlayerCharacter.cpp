@@ -63,6 +63,22 @@ void AAEPlayerCharacter::BeginPlay()
 	RopeVisibility(false);
 }
 
+void AAEPlayerCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	AnimInstance->OnAttackEnd.AddUObject(this, &AAEBasicCharacter::OnAttackMontageEnded);
+	AnimInstance->OnNextAttackCheck.AddLambda([this]() -> void {
+		CanNextCombo = false;
+
+		if (IsComboInputOn)
+		{
+			AttackStartComboState();
+			AnimInstance->JumpToAttackMontageSection(CurrentCombo);
+		}
+		});
+}
+
 void AAEPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -97,18 +113,18 @@ void AAEPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 void AAEPlayerCharacter::MoveForward(float AxisValue)
 {
-	if (!bInGrapplingAnimation)
-	{
-		AddMovementInput(GetActorForwardVector() * AxisValue);
-	}
+	if (!canMove) return;
+	if (bInGrapplingAnimation) return;
+
+	AddMovementInput(GetActorForwardVector() * AxisValue);
 }
 
 void AAEPlayerCharacter::MoveRight(float AxisValue)
 {
-	if (!bInGrapplingAnimation)
-	{
-		AddMovementInput(GetActorRightVector() * AxisValue);
-	}
+	if (!canMove) return;
+	if (bInGrapplingAnimation) return;
+
+	AddMovementInput(GetActorRightVector() * AxisValue);
 }
 
 void AAEPlayerCharacter::TurnAtRate(float Rate)
@@ -123,10 +139,10 @@ void AAEPlayerCharacter::LookUpAtRate(float Rate)
 
 void AAEPlayerCharacter::Jump()
 {
-	if (!bInGrapplingAnimation)
-	{
-		ACharacter::Jump();
-	}
+	if (!canMove) return;
+	if (bInGrapplingAnimation) return;
+	
+	ACharacter::Jump();
 }
 
 float AAEPlayerCharacter::GetHealthPercent() const
@@ -136,6 +152,8 @@ float AAEPlayerCharacter::GetHealthPercent() const
 
 void AAEPlayerCharacter::Grapple()
 {
+	if (!canMove) return;
+
 	if (!IsValid(GrapplePointRef)) return;
 
 	float Distance = (GetActorLocation() - GrapplePointRef->GetActorLocation()).Size();
@@ -143,7 +161,6 @@ void AAEPlayerCharacter::Grapple()
 	{
 		if (bMovingWithGrapple)
 		{
-			
 			FVector LaunchVelocity = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), GrapplingDestination) * 200.0f;
 			LaunchCharacter(LaunchVelocity, false, false);
 		}
@@ -151,7 +168,9 @@ void AAEPlayerCharacter::Grapple()
 		bInGrapplingAnimation = true;
 		bMovingWithGrapple = false;
 		CurrentGrapplePoint = GrapplePointRef;
-		GrapplingDestination = Cast<USceneComponent>(CurrentGrapplePoint->GetDefaultSubobjectByName(TEXT("LandingZone")))->GetComponentLocation() + FVector(0.0f, 0.0f, 110.0f);
+		FVector TargetLocation = Cast<USceneComponent>(CurrentGrapplePoint->GetDefaultSubobjectByName(TEXT("LandingZone")))->GetComponentLocation();
+		//FVector Force = (FVector(TargetLocation.X, TargetLocation.Y, 0) - FVector(GetActorLocation().X, GetActorLocation().Y, 0)).GetSafeNormal() * 1000.0f;
+		GrapplingDestination = TargetLocation + FVector(0.0f, 0.0f, 110.0f);// +Force;
 
 		FRotator NewRotation = FRotator::ZeroRotator;
 		NewRotation.Yaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), GrapplingDestination).Yaw;
@@ -162,12 +181,14 @@ void AAEPlayerCharacter::Grapple()
 
 		if (GetCharacterMovement()->IsFalling())
 		{
+			GetCharacterMovement()->GravityScale = 1.0f;
 			AnimInstance->Montage_Play(GrappleAir);
 		}
 		else
 		{
 			AnimInstance->Montage_Play(GrappleGround);
 		}
+
 	}
 }
 

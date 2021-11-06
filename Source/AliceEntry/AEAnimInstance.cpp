@@ -47,6 +47,12 @@ void UAEAnimInstance::JumpToAttackMontageSection(int32 NewSection)
 	Montage_JumpToSection(GetAttackMontageSectionName(NewSection), AttackMontage);
 }
 
+void UAEAnimInstance::PlayHitAnim()
+{
+	CHECK(!IsDead);
+	Montage_Play(HitMontage, 1.0f);
+}
+
 void UAEAnimInstance::AnimNotify_AttackHitCheck()
 {
 	OnAttackHitCheck.Broadcast();
@@ -81,4 +87,14 @@ void UAEAnimInstance::AnimNotify_RopeDisappear()
 void UAEAnimInstance::AnimNotify_AnimEnd()
 {
 	PlayerRef->ResetMovement();
+}
+
+void UAEAnimInstance::AnimNotify_HitAnimEnd()
+{
+	OnHitAnimEnd.Broadcast();
+}
+
+void UAEAnimInstance::AnimNotify_AttackEnd()
+{
+	OnAttackEnd.Broadcast();
 }

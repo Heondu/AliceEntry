@@ -37,6 +37,8 @@ void AAEAliceCharacter::PostInitializeComponents()
 
 void AAEAliceCharacter::Attack()
 {
+	if (!canMove) return;
+
 	if (IsAttacking)
 	{
 		CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));

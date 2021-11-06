@@ -15,15 +15,11 @@ EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 {
 	EBTNodeResult::Type Result = Super::ExecuteTask(OwnerComp, NodeMemory);
 
-	AAEEnemy* Enemy = Cast<AAEEnemy>(OwnerComp.GetAIOwner()->GetPawn());
+	Enemy = Cast<AAEEnemy>(OwnerComp.GetAIOwner()->GetPawn());
 	if (nullptr == Enemy)
 		return EBTNodeResult::Failed;
 
 	Enemy->Attack();
-	IsAttacking = true;
-	Enemy->OnAttackEnd.AddLambda([this]() -> void {
-		IsAttacking = false;
-	});
 
 	return EBTNodeResult::InProgress;
 }
@@ -31,7 +27,8 @@ EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 void UBTTask_Attack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds);
-	if (!IsAttacking)
+
+	if (!Enemy->IsAttacking)
 	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	}

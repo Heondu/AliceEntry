@@ -18,6 +18,7 @@ class ALICEENTRY_API AAEBunnyCharacter : public AAEPlayerCharacter
 public:
 	AAEBunnyCharacter();
 
+	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 
 protected:
