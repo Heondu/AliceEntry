@@ -86,6 +86,8 @@ protected:
 	FVector PreviousLocation = FVector::ZeroVector;
 	UPROPERTY()
 	bool IsSliding;
+	UPROPERTY()
+	int PreviousAngle = 0;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	bool CanNextCombo;

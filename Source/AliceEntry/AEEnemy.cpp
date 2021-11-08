@@ -24,11 +24,11 @@ void AAEEnemy::BeginPlay()
 	CHECK(nullptr != AnimInstance);
 	AnimInstance->OnAttackHitCheck.AddUObject(this, &AAEEnemy::AttackCheck);
 	AnimInstance->OnAttackEnd.AddLambda([this]() -> void {
-		IsAttacking = false;
+		bIsAttacking = false;
 		});
 	AnimInstance->OnHitEnd.AddLambda([this]() -> void {
-		if (!AnimInstance->IsDead)
-			AIController->RunAI();
+		//if (!AnimInstance->IsDead)
+		//	AIController->RunAI();
 		});
 
 	//AIController는 블루프린트나 인스펙터의 Pawn 카테고리에서 설정 가능
@@ -43,13 +43,13 @@ void AAEEnemy::BeginPlay()
 	
 	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
 
-	AttackRange = 200.0f;
-	AttackRadius = 50.0f;
-	IsAttacking = false;
+	AttackRange = 100.0f;
+	AttackRadius = 100.0f;
+	bIsAttacking = false;
 
 	DeadTimer = 5.0f;
 
-	CanMove = true;
+	bCanMove = true;
 }
 
 // Called every frame
@@ -73,7 +73,7 @@ void AAEEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AAEEnemy::Attack()
 {
-	IsAttacking = true;
+	bIsAttacking = true;
 	PlayAnimMontage(AttackMontages[FMath::RandRange(0, AttackMontages.Num() - 1)], 1.0f);
 }
 
@@ -86,34 +86,34 @@ void AAEEnemy::AttackCheck()
 		GetActorLocation(),
 		GetActorLocation() + GetActorForwardVector() * AttackRange,
 		FQuat::Identity,
-		ECollisionChannel::ECC_GameTraceChannel3,
+		ECollisionChannel::ECC_GameTraceChannel4,
 		FCollisionShape::MakeSphere(AttackRadius),
 		Params
 	);
 
 #if ENABLE_DRAW_DEBUG
-	FVector TraceVec = GetActorForwardVector() * AttackRange;
-	FVector Center = GetActorLocation() + TraceVec * 0.5f;
-	float HalfHeight = AttackRange * 0.5f + AttackRadius;
-	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
-	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
-	float DebugLifeTime = 1.0f;
-
-	DrawDebugCapsule(
-		GetWorld(),
-		Center,
-		HalfHeight,
-		AttackRadius,
-		CapsuleRot,
-		DrawColor,
-		false,
-		DebugLifeTime
-	);
+	//FVector TraceVec = GetActorForwardVector() * AttackRange;
+	//FVector Center = GetActorLocation() + TraceVec * 0.5f;
+	//float HalfHeight = AttackRange * 0.5f + AttackRadius;
+	//FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
+	//FColor DrawColor = bResult ? FColor::Green : FColor::Red;
+	//float DebugLifeTime = 1.0f;
+	//
+	//DrawDebugCapsule(
+	//	GetWorld(),
+	//	Center,
+	//	HalfHeight,
+	//	AttackRadius,
+	//	CapsuleRot,
+	//	DrawColor,
+	//	false,
+	//	DebugLifeTime
+	//);
 #endif
 
 	if (bResult)
 	{
-		if (HitResult.Actor.IsValid())
+		if (HitResult.Actor.IsValid() && HitResult.GetActor()->ActorHasTag("Player"))
 		{
 			LOG(Warning, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
 
@@ -131,10 +131,11 @@ float AAEEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 
 	LOG(Warning, TEXT("Health left %f"), Health);
 
-	AIController->StopAI();
 
 	if (Health <= 0.0f)
 	{
+		AIController->StopAI();
+		bIsDead = true;
 		AnimInstance->SetDeadAnim();
 		SetActorEnableCollision(false);
 		GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda([this]() -> void {
@@ -147,9 +148,10 @@ float AAEEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 	}
 	else
 	{
-		CanMove = false;
-		IsAttacking = false;
-		AnimInstance->PlayHitAnim();
+		//공격 몽타주에 노티파이 넣어서 공격중이라면 canbedamaged 끄기
+		//bCanMove = false;
+		//bIsAttacking = false;
+		//AnimInstance->PlayHitAnim();
 	}
 
 	return DamageApplied;

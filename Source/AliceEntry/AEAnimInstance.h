@@ -12,6 +12,7 @@ DECLARE_MULTICAST_DELEGATE(FOnAttackEndDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnHitEndDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnRollEndDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnSlideEndDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnSlideLoopCheckDelegate);
 
 /**
  * 
@@ -35,11 +36,13 @@ public:
 	FOnHitEndDelegate OnHitEnd;
 	FOnRollEndDelegate OnRollEnd;
 	FOnSlideEndDelegate OnSlideEnd;
+	FOnSlideLoopCheckDelegate OnSlideLoopCheck;
 
 	void SetDeadAnim() { IsDead = true; }
 	void PlayHitAnim();
 	void PlayRollAnim(bool bIsBack);
 	void PlaySlideAnim();
+	void JumpToSlideLoopSection();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
 	bool IsDead;
@@ -97,4 +100,7 @@ private:
 
 	UFUNCTION()
 	void AnimNotify_SlideEnd();
+
+	UFUNCTION()
+	void AnimNotify_SlideLoopCheck();
 };

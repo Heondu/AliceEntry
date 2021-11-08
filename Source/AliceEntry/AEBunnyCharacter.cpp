@@ -38,23 +38,23 @@ void AAEBunnyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 void AAEBunnyCharacter::MoveForward(float AxisValue)
 {
-	if (IsAttacking) return;
+	if (bIsAttacking) return;
 
 	AAEPlayerCharacter::MoveForward(AxisValue);
 }
 
 void AAEBunnyCharacter::MoveRight(float AxisValue)
 {
-	if (IsAttacking) return;
+	if (bIsAttacking) return;
 
 	AAEPlayerCharacter::MoveRight(AxisValue);
 }
 
 void AAEBunnyCharacter::Attack()
 {
-	if (!CanMove) return;
+	if (!bCanMove) return;
 
-	if (IsAttacking)
+	if (bIsAttacking)
 	{
 		CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
 		if (CanNextCombo)
@@ -68,12 +68,17 @@ void AAEBunnyCharacter::Attack()
 		AttackStartComboState();
 		AnimInstance->PlayAttackMontage();
 		AnimInstance->JumpToAttackMontageSection(CurrentCombo);
-		IsAttacking = true;
+		bIsAttacking = true;
 	}
 }
 
 void AAEBunnyCharacter::AttackCheck()
 {
+	FVector Location;
+	FRotator Rotation;
+	GetController()->GetPlayerViewPoint(Location, Rotation);
+	SetActorRotation(FRotator(0, Rotation.Yaw, 0));
+
 	FHitResult HitResult;
 	FCollisionQueryParams Params(NAME_None, false, this);
 	bool bResult = GetWorld()->SweepSingleByChannel(
@@ -87,28 +92,28 @@ void AAEBunnyCharacter::AttackCheck()
 	);
 
 #if ENABLE_DRAW_DEBUG
-	FVector TraceVec = GetActorForwardVector() * AttackRange;
-	FVector Center = GetActorLocation() + TraceVec * 0.5f;
-	float HalfHeight = AttackRange * 0.5f + AttackRadius;
-	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
-	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
-	float DebugLifeTime = 1.0f;
-
-	DrawDebugCapsule(
-		GetWorld(),
-		Center,
-		HalfHeight,
-		AttackRadius,
-		CapsuleRot,
-		DrawColor,
-		false,
-		DebugLifeTime
-	);
+	//FVector TraceVec = GetActorForwardVector() * AttackRange;
+	//FVector Center = GetActorLocation() + TraceVec * 0.5f;
+	//float HalfHeight = AttackRange * 0.5f + AttackRadius;
+	//FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
+	//FColor DrawColor = bResult ? FColor::Green : FColor::Red;
+	//float DebugLifeTime = 1.0f;
+	//
+	//DrawDebugCapsule(
+	//	GetWorld(),
+	//	Center,
+	//	HalfHeight,
+	//	AttackRadius,
+	//	CapsuleRot,
+	//	DrawColor,
+	//	false,
+	//	DebugLifeTime
+	//);
 #endif
 
 	if (bResult)
 	{
-		if (HitResult.Actor.IsValid())
+		if (HitResult.Actor.IsValid() && HitResult.GetActor()->ActorHasTag("Enemy"))
 		{
 			LOG(Warning, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
 

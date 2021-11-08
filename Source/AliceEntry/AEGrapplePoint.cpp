@@ -67,7 +67,7 @@ void AAEGrapplePoint::CheckDistanceFromPlayer()
 	float Value = (PlayerRef->GetActorLocation() - GetActorLocation()).Size();
 	float DesiredSize = UKismetMathLibrary::MapRangeClamped(Value, PlayerRef->GrappleThrowDistance, PlayerRef->DetectionRadius, MaxImageSize, MinImageSize);
 	Image->SetBrushSize(FVector2D(DesiredSize, DesiredSize));
-	Image->SetColorAndOpacity(DesiredSize == MaxImageSize ? FLinearColor::Red : FLinearColor::White);//FLinearColor(1.0f, 0.0f, 0.3f));
+	Image->SetColorAndOpacity(DesiredSize == MaxImageSize ? FLinearColor(1.0f, 0.0f, 0.3f) : FLinearColor::White);//FLinearColor(1.0f, 0.0f, 0.3f));
 }
 
 void AAEGrapplePoint::Use()

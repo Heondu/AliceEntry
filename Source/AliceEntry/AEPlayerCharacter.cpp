@@ -54,12 +54,12 @@ AAEPlayerCharacter::AAEPlayerCharacter()
 	DetectionRadius = 2000;
 	GrappleThrowDistance = 1200;
 
-	IsAttacking = false;
+	bIsAttacking = false;
 	AttackEndComboState();
 
 	DeadTimer = 5.0f;
 
-	CanMove = true;
+	bCanMove = true;
 	IsSliding = false;
 
 	EState = ECharacterState::Stopped;
@@ -81,13 +81,17 @@ void AAEPlayerCharacter::BeginPlay()
 		}
 		});
 	AnimInstance->OnRollEnd.AddLambda([this]() -> void {
-		CanMove = true; 
+		bCanMove = true; 
 		SetCanBeDamaged(true);
 		//bUseControllerRotationYaw = true;
 		});
 	AnimInstance->OnSlideEnd.AddLambda([this]() -> void {
-		CanMove = true;
+		bCanMove = true;
 		IsSliding = false;
+		});
+	AnimInstance->OnSlideLoopCheck.AddLambda([this]() -> void {
+		if (ShouldSlide())
+			AnimInstance->JumpToSlideLoopSection();
 		});
 
 	RopeVisibility(false);
@@ -114,12 +118,9 @@ void AAEPlayerCharacter::Tick(float DeltaTime)
 		}
 	}
 
-	if (ShouldSlide())
+	if (IsSliding == false && ShouldSlide())
 	{
-		if (GetGroundAngle() < -25.0f)
-		{
-			Slide();
-		}
+		Slide();
 	}
 }
 
@@ -142,7 +143,7 @@ void AAEPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 void AAEPlayerCharacter::MoveForward(float AxisValue)
 {
-	if (!CanMove) return;
+	if (!bCanMove) return;
 	if (bInGrapplingAnimation) return;
 
 	if (AxisValue == 0.0f) return;
@@ -156,7 +157,7 @@ void AAEPlayerCharacter::MoveForward(float AxisValue)
 
 void AAEPlayerCharacter::MoveRight(float AxisValue)
 {
-	if (!CanMove) return;
+	if (!bCanMove) return;
 	if (bInGrapplingAnimation) return;
 
 	if (AxisValue == 0.0f) return;
@@ -180,7 +181,7 @@ void AAEPlayerCharacter::LookUpAtRate(float Rate)
 
 void AAEPlayerCharacter::Jump()
 {
-	if (!CanMove) return;
+	if (!bCanMove) return;
 	if (bInGrapplingAnimation) return;
 	
 	ACharacter::Jump();
@@ -193,8 +194,7 @@ float AAEPlayerCharacter::GetHealthPercent() const
 
 void AAEPlayerCharacter::Grapple()
 {
-	if (!CanMove) return;
-
+	if (!bCanMove) return;
 	if (!IsValid(GrapplePointRef)) return;
 
 	float Distance = (GetActorLocation() - GrapplePointRef->GetActorLocation()).Size();
@@ -206,7 +206,7 @@ void AAEPlayerCharacter::Grapple()
 			LaunchCharacter(LaunchVelocity, false, false);
 		}
 		
-		CanMove = false;
+		//CanMove = false;
 		bInGrapplingAnimation = true;
 		bMovingWithGrapple = false;
 		CurrentGrapplePoint = GrapplePointRef;
@@ -240,13 +240,15 @@ void AAEPlayerCharacter::Attack()
 
 void AAEPlayerCharacter::Roll()
 {
-	if (!CanMove) return;
+	if (!bCanMove) return;
 	if (GetCharacterMovement()->IsFalling()) return;
+	if (bInGrapplingAnimation) return;
 
 	//bUseControllerRotationYaw = false;
 	//SetActorRotation(FRotationMatrix::MakeFromX(GetLastMovementInputVector()).Rotator());
-	CanMove = false;
-	IsAttacking = false;
+	bCanMove = false;
+	bIsAttacking = false;
+	AttackEndComboState();
 	SetCanBeDamaged(false);
 
 	if (GetLastMovementInputVector() != FVector::ZeroVector)
@@ -261,11 +263,13 @@ void AAEPlayerCharacter::Roll()
 
 void AAEPlayerCharacter::Slide()
 {
-	if (!CanMove) return;
+	if (!bCanMove) return;
 	if (GetCharacterMovement()->IsFalling()) return;
+	if (bInGrapplingAnimation) return;
 
-	CanMove = false;
-	IsAttacking = false;
+	bCanMove = false;
+	bIsAttacking = false;
+	AttackEndComboState();
 	IsSliding = true;
 
 	AnimInstance->PlaySlideAnim();
@@ -273,16 +277,25 @@ void AAEPlayerCharacter::Slide()
 
 bool AAEPlayerCharacter::ShouldSlide()
 {
+	if (!GetCharacterMovement()->IsMovingOnGround()) return false;
 	if (GetCharacterMovement()->IsFalling()) return false;
 	if (GetCharacterMovement()->Velocity.Size() <= 0) return false;
 
-	return true;
+	int Angle = GetGroundAngle();
+
+	if (Angle > -25) return false;
+
+	bool bResult;
+	if (PreviousAngle != Angle) bResult = false;
+	else bResult = true;
+	PreviousAngle = Angle;
+	return bResult;
 }
 
 float AAEPlayerCharacter::GetGroundAngle()
 {
-	float Angle = FRotationMatrix::MakeFromX(GetActorLocation() - PreviousLocation).Rotator().Pitch;
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Angle : %f"), Angle));
+	int Angle = FMath::RoundToInt(FRotationMatrix::MakeFromX(GetActorLocation() - PreviousLocation).Rotator().Pitch);
+	LOG(Warning, TEXT("%d"), Angle);
 	PreviousLocation = GetActorLocation();
 
 	return Angle;
@@ -346,7 +359,7 @@ void AAEPlayerCharacter::ActivateGrapplePoint()
 		GetWorld(),
 		Camera->GetComponentLocation(),
 		DetectedActor->GetActorLocation(),
-		ETraceTypeQuery::TraceTypeQuery1,
+		ETraceTypeQuery::TraceTypeQuery7,
 		false,
 		ActorsToIgnore,
 		EDrawDebugTrace::None,
@@ -400,7 +413,7 @@ void AAEPlayerCharacter::ResetMovement()
 	CurrentGrapplePoint = NULL;
 	GetCharacterMovement()->GravityScale = 1.0f;
 	bInGrapplingAnimation = false;
-	CanMove = true;
+	//CanMove = true;
 }
 
 void AAEPlayerCharacter::RopeVisibility(bool bVisible)
@@ -420,9 +433,9 @@ void AAEPlayerCharacter::MoveRope()
 
 void AAEPlayerCharacter::OnAttackMontageEnded()
 {
-	CHECK(IsAttacking);
+	CHECK(bIsAttacking);
 	CHECK(CurrentCombo > 0);
-	IsAttacking = false;
+	bIsAttacking = false;
 	AttackEndComboState();
 	//OnAttackEnd.Broadcast();
 }
@@ -452,13 +465,14 @@ float AAEPlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dam
 
 	if (Health <= 0.0f)
 	{
+		bIsDead = true;
 		AnimInstance->SetDeadAnim();
 		SetActorEnableCollision(false);
 	}
 	else if (CanBeDamaged())
 	{
-		CanMove = false;
-		IsAttacking = false;
+		bCanMove = false;
+		bIsAttacking = false;
 		AttackEndComboState();
 		AnimInstance->PlayHitAnim();
 	}

@@ -24,7 +24,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-	bool IsAttacking;
+	bool bIsAttacking;
 
 protected:
 	UPROPERTY()
@@ -49,5 +49,8 @@ protected:
 	float Damage = 10;
 
 	UPROPERTY(VisibleAnywhere)
-	bool CanMove;
+	bool bCanMove;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool bIsDead;
 };

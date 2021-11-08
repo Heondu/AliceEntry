@@ -8,6 +8,8 @@
 AAEBasicCharacter::AAEBasicCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	bIsDead = false;
 }
 
 void AAEBasicCharacter::BeginPlay()
@@ -18,7 +20,7 @@ void AAEBasicCharacter::BeginPlay()
 	CHECK(nullptr != AnimInstance);
 
 	AnimInstance->OnHitEnd.AddLambda([this]() -> void {
-		CanMove = true;
+		bCanMove = true;
 		});
 
 	Health = MaxHealth;

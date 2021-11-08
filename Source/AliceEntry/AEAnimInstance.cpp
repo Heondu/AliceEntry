@@ -72,6 +72,14 @@ void UAEAnimInstance::PlaySlideAnim()
 	Montage_Play(SlideMontage, 1.0f);
 }
 
+void UAEAnimInstance::JumpToSlideLoopSection()
+{
+	CHECK(!IsDead);
+	CHECK(Montage_IsPlaying(SlideMontage));
+
+	Montage_JumpToSection(FName("SlideLoop"), SlideMontage);
+}
+
 void UAEAnimInstance::AnimNotify_AttackHitCheck()
 {
 	OnAttackHitCheck.Broadcast();
@@ -126,4 +134,9 @@ void UAEAnimInstance::AnimNotify_RollEnd()
 void UAEAnimInstance::AnimNotify_SlideEnd()
 {
 	OnSlideEnd.Broadcast();
+}
+
+void UAEAnimInstance::AnimNotify_SlideLoopCheck()
+{
+	OnSlideLoopCheck.Broadcast();
 }

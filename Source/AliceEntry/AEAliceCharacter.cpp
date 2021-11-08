@@ -37,9 +37,9 @@ void AAEAliceCharacter::PostInitializeComponents()
 
 void AAEAliceCharacter::Attack()
 {
-	if (!CanMove) return;
+	if (!bCanMove) return;
 
-	if (IsAttacking)
+	if (bIsAttacking)
 	{
 		CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
 		if (CanNextCombo)
@@ -54,7 +54,7 @@ void AAEAliceCharacter::Attack()
 		AnimInstance->PlayAttackMontage();
 		AnimInstance->JumpToAttackMontageSection(CurrentCombo);
 		Shoot();
-		IsAttacking = true;
+		bIsAttacking = true;
 	}
 }
 
@@ -66,6 +66,7 @@ void AAEAliceCharacter::Shoot()
 	FVector Location;
 	FRotator Rotation;
 	GetController()->GetPlayerViewPoint(Location, Rotation);
+	SetActorRotation(FRotator(0, Rotation.Yaw, 0));
 
 	FVector End = Location + Rotation.Vector() * MaxRange;
 
@@ -79,7 +80,7 @@ void AAEAliceCharacter::Shoot()
 		FVector ShotDirection = -Rotation.Vector();
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), GunL->ImpactEffect, Hit.Location, ShotDirection.Rotation());
 		AActor* HitActor = Hit.GetActor();
-		if (nullptr != HitActor)
+		if (nullptr != HitActor && HitActor->ActorHasTag("Enemy"))
 		{
 			FPointDamageEvent DamageEvent(Damage, Hit, ShotDirection, nullptr);
 			HitActor->TakeDamage(Damage, DamageEvent, GetController(), this);

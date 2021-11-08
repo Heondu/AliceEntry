@@ -20,7 +20,7 @@ class ALICEENTRY_API AAEAliceCharacter : public AAEPlayerCharacter
 public:
 	AAEAliceCharacter();
 
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 
 private:
