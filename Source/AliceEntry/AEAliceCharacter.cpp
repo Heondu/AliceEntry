@@ -3,7 +3,7 @@
 
 #include "AEAliceCharacter.h"
 #include "AEGun.h"
-#include "AEAnimInstance.h"
+#include "AEPlayerAnimInstance.h"
 
 AAEAliceCharacter::AAEAliceCharacter()
 {

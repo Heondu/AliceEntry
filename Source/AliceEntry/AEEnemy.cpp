@@ -3,7 +3,7 @@
 
 #include "AEEnemy.h"
 #include "AEAIController.h"
-#include "AEAnimInstance.h"
+#include "AEEnemyAnimInstance.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -20,17 +20,6 @@ void AAEEnemy::BeginPlay()
 	Super::BeginPlay();
 
 	AIController = Cast<AAEAIController>(GetController());
-
-	CHECK(nullptr != AnimInstance);
-	AnimInstance->OnAttackHitCheck.AddUObject(this, &AAEEnemy::AttackCheck);
-	AnimInstance->OnAttackEnd.AddLambda([this]() -> void {
-		bIsAttacking = false;
-		});
-	AnimInstance->OnHitEnd.AddLambda([this]() -> void {
-		//if (!AnimInstance->IsDead)
-		//	AIController->RunAI();
-		});
-
 	//AIController는 블루프린트나 인스펙터의 Pawn 카테고리에서 설정 가능
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	
@@ -40,11 +29,23 @@ void AAEEnemy::BeginPlay()
 	//회전 보간
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 480.0f, 0.0f);
-	
 	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
+
+	AnimInstance = Cast<UAEEnemyAnimInstance>(GetMesh()->GetAnimInstance());
+	CHECK(nullptr != AnimInstance);
+	AnimInstance->OnHitEnd.AddLambda([this]() -> void {
+		bCanMove = true;
+		});
+	AnimInstance->OnAttackHitCheck.AddUObject(this, &AAEEnemy::AttackCheck);
+	AnimInstance->OnAttackEnd.AddLambda([this]() -> void {
+		bIsAttacking = false;
+		});
+	AnimInstance->OnAttackMove.AddUObject(this, &AAEEnemy::AttackMove);
 
 	AttackRange = 100.0f;
 	AttackRadius = 100.0f;
+	AttackMoveForce = 800.0f;
+
 	bIsAttacking = false;
 
 	DeadTimer = 5.0f;
@@ -74,7 +75,7 @@ void AAEEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AAEEnemy::Attack()
 {
 	bIsAttacking = true;
-	PlayAnimMontage(AttackMontages[FMath::RandRange(0, AttackMontages.Num() - 1)], 1.0f);
+	AnimInstance->PlayAttackMontage();
 }
 
 void AAEEnemy::AttackCheck()
@@ -92,23 +93,23 @@ void AAEEnemy::AttackCheck()
 	);
 
 #if ENABLE_DRAW_DEBUG
-	//FVector TraceVec = GetActorForwardVector() * AttackRange;
-	//FVector Center = GetActorLocation() + TraceVec * 0.5f;
-	//float HalfHeight = AttackRange * 0.5f + AttackRadius;
-	//FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
-	//FColor DrawColor = bResult ? FColor::Green : FColor::Red;
-	//float DebugLifeTime = 1.0f;
-	//
-	//DrawDebugCapsule(
-	//	GetWorld(),
-	//	Center,
-	//	HalfHeight,
-	//	AttackRadius,
-	//	CapsuleRot,
-	//	DrawColor,
-	//	false,
-	//	DebugLifeTime
-	//);
+	FVector TraceVec = GetActorForwardVector() * AttackRange;
+	FVector Center = GetActorLocation() + TraceVec * 0.5f;
+	float HalfHeight = AttackRange * 0.5f + AttackRadius;
+	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
+	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
+	float DebugLifeTime = 1.0f;
+	
+	DrawDebugCapsule(
+		GetWorld(),
+		Center,
+		HalfHeight,
+		AttackRadius,
+		CapsuleRot,
+		DrawColor,
+		false,
+		DebugLifeTime
+	);
 #endif
 
 	if (bResult)
@@ -128,9 +129,9 @@ float AAEEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 	float DamageApplied = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	DamageApplied = FMath::Min(Health, DamageApplied);
 	Health -= DamageApplied;
-
 	LOG(Warning, TEXT("Health left %f"), Health);
 
+	GetCharacterMovement()->AddImpulse(-GetActorForwardVector() * AttackMoveForce, true);
 
 	if (Health <= 0.0f)
 	{
@@ -146,13 +147,11 @@ float AAEEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 			Destroy();
 			}), DeadTimer, false);
 	}
-	else
-	{
-		//공격 몽타주에 노티파이 넣어서 공격중이라면 canbedamaged 끄기
-		//bCanMove = false;
-		//bIsAttacking = false;
-		//AnimInstance->PlayHitAnim();
-	}
 
 	return DamageApplied;
+}
+
+void AAEEnemy::AttackMove()
+{
+	GetCharacterMovement()->AddImpulse(GetActorForwardVector() * AttackMoveForce, true);
 }

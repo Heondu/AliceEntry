@@ -10,9 +10,7 @@ DECLARE_MULTICAST_DELEGATE(FOnNextAttackCheckDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnAttackHitCheckDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnAttackEndDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnHitEndDelegate);
-DECLARE_MULTICAST_DELEGATE(FOnRollEndDelegate);
-DECLARE_MULTICAST_DELEGATE(FOnSlideEndDelegate);
-DECLARE_MULTICAST_DELEGATE(FOnSlideLoopCheckDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnAttackMoveDelegate);
 
 /**
  * 
@@ -27,22 +25,15 @@ public:
 	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
-	void PlayAttackMontage();
-	void JumpToAttackMontageSection(int32 NewSection);
+	virtual void PlayAttackMontage();
+	void SetDeadAnim() { IsDead = true; }
+	void PlayHitAnim();
 
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
 	FOnAttackHitCheckDelegate OnAttackHitCheck;
 	FOnAttackEndDelegate OnAttackEnd;
 	FOnHitEndDelegate OnHitEnd;
-	FOnRollEndDelegate OnRollEnd;
-	FOnSlideEndDelegate OnSlideEnd;
-	FOnSlideLoopCheckDelegate OnSlideLoopCheck;
-
-	void SetDeadAnim() { IsDead = true; }
-	void PlayHitAnim();
-	void PlayRollAnim(bool bIsBack);
-	void PlaySlideAnim();
-	void JumpToSlideLoopSection();
+	FOnAttackMoveDelegate OnAttackMove;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
 	bool IsDead;
@@ -55,39 +46,13 @@ private:
 	bool IsInAir;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
-	UAnimMontage* AttackMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* HitMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
-	UAnimMontage* RollMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
-	UAnimMontage* SlideMontage;
 
 	UFUNCTION()
 	void AnimNotify_AttackHitCheck();
 
 	UFUNCTION()
 	void AnimNotify_NextAttackCheck();
-
-	FName GetAttackMontageSectionName(int32 Section);
-
-	UPROPERTY()
-	class AAEPlayerCharacter* PlayerRef;
-
-	UFUNCTION()
-	void AnimNotify_StartMovement();
-
-	UFUNCTION()
-	void AnimNotify_RopeAppear();
-
-	UFUNCTION()
-	void AnimNotify_RopeDisappear();
-
-	UFUNCTION()
-	void AnimNotify_AnimEnd();
 
 	UFUNCTION()
 	void AnimNotify_HitEnd();
@@ -96,11 +61,5 @@ private:
 	void AnimNotify_AttackEnd();
 
 	UFUNCTION()
-	void AnimNotify_RollEnd();
-
-	UFUNCTION()
-	void AnimNotify_SlideEnd();
-
-	UFUNCTION()
-	void AnimNotify_SlideLoopCheck();
+	void AnimNotify_AttackMove();
 };

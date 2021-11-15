@@ -26,14 +26,19 @@ protected:
 
 	virtual void MoveForward(float AxisValue) override;
 	virtual void MoveRight(float AxisValue) override;
+	virtual void Jump() override;
 	virtual void Attack() override;
 
 private:
 	void AttackCheck();
+	void AttackMove();
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	float AttackRange;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	float AttackRadius;
+
+	UPROPERTY(EditDefaultsOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	float AttackMoveForce;
 };

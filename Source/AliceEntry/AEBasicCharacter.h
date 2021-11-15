@@ -27,9 +27,6 @@ public:
 	bool bIsAttacking;
 
 protected:
-	UPROPERTY()
-	class UAEAnimInstance* AnimInstance;
-
 	//클래스나 블루프린트를 받아오려면 TSubclassOf로 클래스를 명시해야 한다.
 	UPROPERTY(EditDefaultsOnly, Category = Weapon)
 	TSubclassOf<class AAEWeapon> Weapon;

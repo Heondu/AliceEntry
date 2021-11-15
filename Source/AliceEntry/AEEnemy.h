@@ -33,9 +33,10 @@ public:
 
 private:
 	void AttackCheck();
+	void AttackMove();
 
-	UPROPERTY(EditDefaultsOnly)
-	TArray<UAnimMontage*> AttackMontages;
+	UPROPERTY()
+	class UAEEnemyAnimInstance* AnimInstance;
 
 	UPROPERTY()
 	class AAEAIController* AIController;
@@ -45,4 +46,7 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	float AttackRadius;
+
+	UPROPERTY(EditDefaultsOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	float AttackMoveForce;
 };

@@ -9,6 +9,7 @@
 const FName AAEAIController::HomePosKey(TEXT("HomePos"));
 const FName AAEAIController::PatrolPosKey(TEXT("PatrolPos"));
 const FName AAEAIController::TargetKey(TEXT("Target"));
+const FName AAEAIController::CanAttack(TEXT("CanAttack"));
 
 AAEAIController::AAEAIController()
 {

@@ -2,7 +2,7 @@
 
 
 #include "AEBunnyCharacter.h"
-#include "AEAnimInstance.h"
+#include "AEPlayerAnimInstance.h"
 #include "DrawDebugHelpers.h"
 
 AAEBunnyCharacter::AAEBunnyCharacter()
@@ -16,9 +16,11 @@ void AAEBunnyCharacter::BeginPlay()
 
 	CHECK(nullptr != AnimInstance);
 	AnimInstance->OnAttackHitCheck.AddUObject(this, &AAEBunnyCharacter::AttackCheck);
+	AnimInstance->OnAttackMove.AddUObject(this, &AAEBunnyCharacter::AttackMove);
 
 	AttackRange = 200.0f;
 	AttackRadius = 50.0f;
+	AttackMoveForce = 800.0f;
 
 	MaxCombo = 3;
 }
@@ -34,6 +36,8 @@ void AAEBunnyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AAEBunnyCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AAEBunnyCharacter::MoveRight);
+
+	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &AAEBunnyCharacter::Jump);
 }
 
 void AAEBunnyCharacter::MoveForward(float AxisValue)
@@ -48,6 +52,13 @@ void AAEBunnyCharacter::MoveRight(float AxisValue)
 	if (bIsAttacking) return;
 
 	AAEPlayerCharacter::MoveRight(AxisValue);
+}
+
+void AAEBunnyCharacter::Jump()
+{
+	if (bIsAttacking) return;
+
+	AAEPlayerCharacter::Jump();
 }
 
 void AAEBunnyCharacter::Attack()
@@ -74,11 +85,6 @@ void AAEBunnyCharacter::Attack()
 
 void AAEBunnyCharacter::AttackCheck()
 {
-	FVector Location;
-	FRotator Rotation;
-	GetController()->GetPlayerViewPoint(Location, Rotation);
-	SetActorRotation(FRotator(0, Rotation.Yaw, 0));
-
 	FHitResult HitResult;
 	FCollisionQueryParams Params(NAME_None, false, this);
 	bool bResult = GetWorld()->SweepSingleByChannel(
@@ -92,23 +98,23 @@ void AAEBunnyCharacter::AttackCheck()
 	);
 
 #if ENABLE_DRAW_DEBUG
-	//FVector TraceVec = GetActorForwardVector() * AttackRange;
-	//FVector Center = GetActorLocation() + TraceVec * 0.5f;
-	//float HalfHeight = AttackRange * 0.5f + AttackRadius;
-	//FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
-	//FColor DrawColor = bResult ? FColor::Green : FColor::Red;
-	//float DebugLifeTime = 1.0f;
-	//
-	//DrawDebugCapsule(
-	//	GetWorld(),
-	//	Center,
-	//	HalfHeight,
-	//	AttackRadius,
-	//	CapsuleRot,
-	//	DrawColor,
-	//	false,
-	//	DebugLifeTime
-	//);
+	FVector TraceVec = GetActorForwardVector() * AttackRange;
+	FVector Center = GetActorLocation() + TraceVec * 0.5f;
+	float HalfHeight = AttackRange * 0.5f + AttackRadius;
+	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
+	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
+	float DebugLifeTime = 1.0f;
+	
+	DrawDebugCapsule(
+		GetWorld(),
+		Center,
+		HalfHeight,
+		AttackRadius,
+		CapsuleRot,
+		DrawColor,
+		false,
+		DebugLifeTime
+	);
 #endif
 
 	if (bResult)
@@ -121,4 +127,10 @@ void AAEBunnyCharacter::AttackCheck()
 			HitResult.Actor->TakeDamage(Damage, DamageEvent, GetController(), this);
 		}
 	}
+}
+
+void AAEBunnyCharacter::AttackMove()
+{
+	GetCharacterMovement()->AddImpulse(GetActorForwardVector() * AttackMoveForce, true);
+	CamShake();
 }

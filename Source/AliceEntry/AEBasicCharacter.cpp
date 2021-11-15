@@ -2,7 +2,7 @@
 
 
 #include "AEBasicCharacter.h"
-#include "AEAnimInstance.h"
+#include "AEPlayerAnimInstance.h"
 #include "AEWeapon.h"
 
 AAEBasicCharacter::AAEBasicCharacter()
@@ -15,13 +15,6 @@ AAEBasicCharacter::AAEBasicCharacter()
 void AAEBasicCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AnimInstance = Cast<UAEAnimInstance>(GetMesh()->GetAnimInstance());
-	CHECK(nullptr != AnimInstance);
-
-	AnimInstance->OnHitEnd.AddLambda([this]() -> void {
-		bCanMove = true;
-		});
 
 	Health = MaxHealth;
 
