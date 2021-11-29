@@ -44,6 +44,7 @@ void AAEBunnyCharacter::MoveForward(float AxisValue)
 {
 	if (bIsAttacking) return;
 
+
 	AAEPlayerCharacter::MoveForward(AxisValue);
 }
 
@@ -64,6 +65,7 @@ void AAEBunnyCharacter::Jump()
 void AAEBunnyCharacter::Attack()
 {
 	if (!bCanMove) return;
+	if (bInGrapplingAnimation) return;
 
 	if (bIsAttacking)
 	{

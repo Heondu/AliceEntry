@@ -3,6 +3,11 @@
 
 #include "AEPlayerAnimInstance.h"
 
+void UAEPlayerAnimInstance::NativeBeginPlay()
+{
+	PlayerRef = Cast<AAEPlayerCharacter>(TryGetPawnOwner());
+}
+
 void UAEPlayerAnimInstance::PlayAttackMontage()
 {
 	Super::PlayAttackMontage();

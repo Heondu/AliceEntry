@@ -11,7 +11,7 @@
 UENUM()
 enum class ECharacterState
 {
-	Stopped	UMETA(DisplayName == "Stopped"),
+	Stopped		UMETA(DisplayName == "Stopped"),
 	Moving		UMETA(DisplayName == "Moving"),
 	Attacking	UMETA(DisplayName == "Attacking"),
 	Grappling	UMETA(DisplayName == "Grappling"),
@@ -37,6 +37,22 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Camera)
 	class UCameraComponent* Camera;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Grapple)
+	class UCableComponent* Rope;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Grapple)
+	class UStaticMeshComponent* Hook;
+
+	void CheckForGrapplePoints();
+	void ActivateGrapplePoint();
+	void DeactivateGrapplePoint();
+	void GrapplingMovement();
+	void StartGrapplingMovement();
+	void ResetMovement();
+	void RopeVisibility(bool bVisible);
+	void MoveRope();
+
+
 	UFUNCTION()
 	void OnAttackMontageEnded();
 
@@ -55,8 +71,13 @@ protected:
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
 	void Jump();
+	void Grapple();
+	void Swing();
+	void AttachGrapplingHook();
+	void DetachGrapplingHook();
 	virtual void Attack();
 	void Roll();
+	void Slide();
 	
 	void CamShake();
 
@@ -86,4 +107,75 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Effect, Meta = (AllowPrivateAccess = true))
 	TSubclassOf<UCameraShakeBase> ShakeAttack;
+
+public:
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	float DetectionRadius;
+
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	float GrappleThrowDistance;
+
+protected:
+	UPROPERTY()
+	AActor* DetectedActor;
+
+	UPROPERTY()
+	class AAEGrapplePoint* GrapplePointRef;
+
+	UPROPERTY()
+	class AAEGrapplePoint* CurrentGrapplePoint;
+
+	UPROPERTY()
+	FVector GrapplingDestination;
+
+	UPROPERTY()
+	FVector StartingPosition;
+
+	UPROPERTY()
+	bool bMovingWithGrapple;
+
+	UPROPERTY()
+	bool bInGrapplingAnimation;
+
+	UPROPERTY()
+	float MontagePosition;
+
+	UPROPERTY()
+	float RopeBaseLength;
+
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	UCurveFloat* AirSpeedCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	UCurveFloat* GroundSpeedCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	UCurveFloat* AirHeightOffsetCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	UCurveFloat* GroundHeightOffsetCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	UCurveFloat* AirRopeLength;
+
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	UCurveFloat* GroundRopeLength;
+
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	UCurveFloat* AirRopePosition;
+
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	UCurveFloat* GroundRopePosition;
+
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	UAnimMontage* GrappleAir;
+
+	UPROPERTY(EditDefaultsOnly, Category = Grapple)
+	UAnimMontage* GrappleGround;
+
+	UPROPERTY()
+	bool bGrapplingHookAttached;
+
+	UPROPERTY()
+	FVector HookPoint;
 };

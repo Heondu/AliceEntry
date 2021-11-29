@@ -19,4 +19,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
 	TArray<UAnimMontage*> AttackMontages;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* JumpAttackMontage;
 };

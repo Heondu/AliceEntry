@@ -38,6 +38,7 @@ void AAEAliceCharacter::PostInitializeComponents()
 void AAEAliceCharacter::Attack()
 {
 	if (!bCanMove) return;
+	if (bInGrapplingAnimation) return;
 
 	if (bIsAttacking)
 	{

@@ -25,9 +25,9 @@ void AAEEnemy::BeginPlay()
 	
 	//부드러운 회전을 위해 꺼야 함
 	bUseControllerRotationYaw = false;
-	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	//회전 보간
-	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 480.0f, 0.0f);
 	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
 
@@ -131,11 +131,12 @@ float AAEEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 	Health -= DamageApplied;
 	LOG(Warning, TEXT("Health left %f"), Health);
 
-	GetCharacterMovement()->AddImpulse(-GetActorForwardVector() * AttackMoveForce, true);
+	//FVector HitDirection = (GetActorLocation() - DamageCauser->GetActorLocation()).GetSafeNormal();
+	//GetCharacterMovement()->AddImpulse(HitDirection * 800, true);
 
 	if (Health <= 0.0f)
 	{
-		AIController->StopAI();
+		//AIController->StopAI();
 		bIsDead = true;
 		AnimInstance->SetDeadAnim();
 		SetActorEnableCollision(false);
