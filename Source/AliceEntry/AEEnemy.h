@@ -50,4 +50,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	float AttackMoveForce;
+
+	UPROPERTY(EditDefaultsOnly, Category = Sound)
+	USoundBase* HitSound;
 };

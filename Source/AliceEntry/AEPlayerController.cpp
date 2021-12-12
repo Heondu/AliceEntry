@@ -24,9 +24,9 @@ void AAEPlayerController::ChangeCharacter()
 	for (AActor* Actor : Actors)
 		Actor->Destroy();
 	GetPawn()->Destroy();
-
+	
 	AAEPlayerCharacter* NewCharacter;
-
+	
 	if (bFlag)
 	{
 		NewCharacter = GetWorld()->SpawnActor<AAEAliceCharacter>(AliceClass, Location, Rotation);

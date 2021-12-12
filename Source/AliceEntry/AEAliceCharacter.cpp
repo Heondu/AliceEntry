@@ -7,6 +7,8 @@
 
 AAEAliceCharacter::AAEAliceCharacter()
 {
+	AttackRange = 200.0f;
+	AttackRadius = 50.0f;
 	MaxCombo = 2;
 }
 
@@ -15,6 +17,7 @@ void AAEAliceCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	CHECK(nullptr != AnimInstance);
+	AnimInstance->OnAttackHitCheck.AddUObject(this, &AAEAliceCharacter::AttackCheck);
 	AnimInstance->OnNextAttackCheck.AddLambda([this]() -> void {
 		if (IsComboInputOn)
 		{
@@ -28,11 +31,22 @@ void AAEAliceCharacter::BeginPlay()
 	GunR->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("Hand_rSocket"));
 	GunL->SetOwner(this);
 	GunR->SetOwner(this);
+
+	AnimInstance->OnLeftShot.AddUObject(GunL, &AAEGun::PullTrigger);
+	AnimInstance->OnRightShot.AddUObject(GunR, &AAEGun::PullTrigger);
 }
 
 void AAEAliceCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+}
+
+void AAEAliceCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAction("Skill1", EInputEvent::IE_Pressed, this, &AAEAliceCharacter::Skill1);
+	PlayerInputComponent->BindAction("Skill2", EInputEvent::IE_Pressed, this, &AAEAliceCharacter::Skill2);
 }
 
 void AAEAliceCharacter::Attack()
@@ -61,9 +75,6 @@ void AAEAliceCharacter::Attack()
 
 void AAEAliceCharacter::Shoot()
 {
-	GunL->PullTrigger();
-	GunR->PullTrigger();
-
 	FVector Location;
 	FRotator Rotation;
 	GetController()->GetPlayerViewPoint(Location, Rotation);
@@ -87,4 +98,24 @@ void AAEAliceCharacter::Shoot()
 			HitActor->TakeDamage(Damage, DamageEvent, GetController(), this);
 		}
 	}
+}
+
+void AAEAliceCharacter::Skill1()
+{
+	if (!bCanMove) return;
+	if (bInGrapplingAnimation) return;
+	if (bIsAttacking) return;
+
+	bIsAttacking = true;
+	AnimInstance->PlaySkillAnim("1");
+}
+
+void AAEAliceCharacter::Skill2()
+{
+	if (!bCanMove) return;
+	if (bInGrapplingAnimation) return;
+	if (bIsAttacking) return;
+
+	bIsAttacking = true;
+	AnimInstance->PlaySkillAnim("2");
 }

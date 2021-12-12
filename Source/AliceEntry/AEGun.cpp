@@ -21,6 +21,7 @@ AAEGun::AAEGun()
 void AAEGun::PullTrigger()
 {
 	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, TEXT("MuzzleFlash"));
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), SoundClip, GetActorLocation());
 }
 
 // Called when the game starts or when spawned

@@ -23,9 +23,15 @@ public:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 
-private:
+protected:
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
 	virtual void Attack() override;
+
+private:
 	void Shoot();
+	void Skill1();
+	void Skill2();
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AAEGun> GunClass;

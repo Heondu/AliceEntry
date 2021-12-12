@@ -12,9 +12,11 @@ UENUM()
 enum class ECharacterState
 {
 	Stopped		UMETA(DisplayName == "Stopped"),
-	Moving		UMETA(DisplayName == "Moving"),
+	Walking		UMETA(DisplayName == "Walking"),
+	Running		UMETA(DisplayName == "Running"),
 	Attacking	UMETA(DisplayName == "Attacking"),
 	Grappling	UMETA(DisplayName == "Grappling"),
+	Swing		UMETA(DisplayName == "Swing"),
 	Rolling		UMETA(DisplayName == "Rolling"),
 	Sliding		UMETA(DisplayName == "Sliding"),
 	Dead		UMETA(DisplayName == "Dead"),
@@ -61,6 +63,9 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	void Appearance();
+	void Dissolve();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
@@ -76,8 +81,13 @@ protected:
 	void AttachGrapplingHook();
 	void DetachGrapplingHook();
 	virtual void Attack();
+	void AttackCheck();
 	void Roll();
+	void Sprint();
 	void Slide();
+	bool ShouldSlide();
+	float GetGroundAngle();
+	void ChangeFromSprintToWalk();
 	
 	void CamShake();
 
@@ -104,6 +114,12 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	int32 MaxCombo;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	float AttackRange;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	float AttackRadius;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Effect, Meta = (AllowPrivateAccess = true))
 	TSubclassOf<UCameraShakeBase> ShakeAttack;
@@ -167,15 +183,36 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Grapple)
 	UCurveFloat* GroundRopePosition;
 
-	UPROPERTY(EditDefaultsOnly, Category = Grapple)
-	UAnimMontage* GrappleAir;
-
-	UPROPERTY(EditDefaultsOnly, Category = Grapple)
-	UAnimMontage* GrappleGround;
-
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, Category = Grapple)
 	bool bGrapplingHookAttached;
 
 	UPROPERTY()
 	FVector HookPoint;
+
+	UPROPERTY()
+	float AttachedTime;
+
+	UPROPERTY()
+	float GrapplingTiming;
+
+	UPROPERTY(BlueprintReadOnly, Category = Grapple)
+	float SwingAngle;
+
+	UPROPERTY(EditDefaultsOnly, Category = Movement)
+	float WalkSpeed;
+	
+	UPROPERTY(EditDefaultsOnly, Category = Movement)
+	float SprintSpeed;
+
+	UPROPERTY(EditDefaultsOnly, Category = Sound)
+	USoundBase* HitSound;
+
+	UPROPERTY()
+	int PreviousAngle;
+
+	UPROPERTY()
+	FVector PreviousLocation;
+
+	UPROPERTY()
+	bool bIsSprint;
 };

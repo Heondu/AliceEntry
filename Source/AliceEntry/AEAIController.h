@@ -26,6 +26,8 @@ public:
 	void RunAI();
 	void StopAI();
 
+	void SetTarget(UObject* Target);
+
 private:
 	UPROPERTY(EditAnywhere, Category = AI)
 	class UBehaviorTree* BTAsset;

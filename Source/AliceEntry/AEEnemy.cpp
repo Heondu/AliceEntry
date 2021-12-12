@@ -74,6 +74,8 @@ void AAEEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AAEEnemy::Attack()
 {
+	if (bIsDead) return;
+
 	bIsAttacking = true;
 	AnimInstance->PlayAttackMontage();
 }
@@ -130,14 +132,18 @@ float AAEEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 	DamageApplied = FMath::Min(Health, DamageApplied);
 	Health -= DamageApplied;
 	LOG(Warning, TEXT("Health left %f"), Health);
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, GetActorLocation());
+
+	AIController->SetTarget(EventInstigator);
 
 	//FVector HitDirection = (GetActorLocation() - DamageCauser->GetActorLocation()).GetSafeNormal();
 	//GetCharacterMovement()->AddImpulse(HitDirection * 800, true);
 
 	if (Health <= 0.0f)
 	{
-		//AIController->StopAI();
+		AIController->StopAI();
 		bIsDead = true;
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
 		AnimInstance->SetDeadAnim();
 		SetActorEnableCollision(false);
 		GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda([this]() -> void {

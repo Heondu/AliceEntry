@@ -8,6 +8,11 @@
 #include "AEPlayerAnimInstance.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FOnRollEndDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnSlideEndDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnLeftShotDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnRightShotDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnFlyingModeStartDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnFlyingModeEndDelegate);
 
 /**
  * 
@@ -21,9 +26,23 @@ public:
 	virtual void NativeBeginPlay() override;
 	virtual void PlayAttackMontage() override;
 	void JumpToAttackMontageSection(int32 NewSection);
-	void PlayRollAnim(bool bIsBack);
+	void PlayRollAnim(FName Name);
+	void PlaySlideAnim();
+	void PlayGrappleAnim(bool bIsAir);
+	void PlaySkillAnim(FName Name);
 
 	FOnRollEndDelegate OnRollEnd;
+	FOnSlideEndDelegate OnSlideEnd;
+	FOnLeftShotDelegate OnLeftShot;
+	FOnRightShotDelegate OnRightShot;
+	FOnFlyingModeStartDelegate OnFlyingModeStart;
+	FOnFlyingModeEndDelegate OnFlyingModeEnd;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* GrappleAir;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* GrappleGround;
 private:
 	FName GetAttackMontageSectionName(int32 Section);
 
@@ -32,6 +51,12 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* RollMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* SlideMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* SkillMontage;
 
 	UPROPERTY()
 	class AAEPlayerCharacter* PlayerRef;
@@ -50,4 +75,19 @@ private:
 
 	UFUNCTION()
 	void AnimNotify_AnimEnd() { PlayerRef->ResetMovement(); }
+
+	UFUNCTION()
+	void AnimNotify_SlideEnd() { OnSlideEnd.Broadcast(); }
+
+	UFUNCTION()
+	void AnimNotify_LeftShot() { OnLeftShot.Broadcast(); }
+
+	UFUNCTION()
+	void AnimNotify_RightShot() { OnRightShot.Broadcast(); }
+
+	UFUNCTION()
+	void AnimNotify_FlyingModeStart() { OnFlyingModeStart.Broadcast(); }
+
+	UFUNCTION()
+	void AnimNotify_FlyingModeEnd() { OnFlyingModeEnd.Broadcast(); }
 };

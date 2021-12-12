@@ -63,6 +63,8 @@ void AAEGrapplePoint::Deactivate()
 
 void AAEGrapplePoint::CheckDistanceFromPlayer()
 {
+	if (nullptr == PlayerRef) return;
+
 	UImage* Image = WidgetRef->WidgetTree->FindWidget<UImage>("Filling");
 	float Value = (PlayerRef->GetActorLocation() - GetActorLocation()).Size();
 	float DesiredSize = UKismetMathLibrary::MapRangeClamped(Value, PlayerRef->GrappleThrowDistance, PlayerRef->DetectionRadius, MaxImageSize, MinImageSize);

@@ -25,7 +25,7 @@ void AAEAIController::RunAI()
 {
 	if (UseBlackboard(BBAsset, Blackboard))
 	{
-		Blackboard->SetValueAsVector(HomePosKey, GetPawn()->GetActorLocation());
+		//Blackboard->SetValueAsVector(HomePosKey, GetPawn()->GetActorLocation());
 		if (!RunBehaviorTree(BTAsset))
 		{
 			LOG(Error, TEXT("AIController couldn't run behavior tree!"));
@@ -38,4 +38,10 @@ void AAEAIController::StopAI()
 	UBehaviorTreeComponent* BehaviorTreeComponent = Cast<UBehaviorTreeComponent>(BrainComponent);
 	if (nullptr == BehaviorTreeComponent) return;
 	BehaviorTreeComponent->StopTree(EBTStopMode::Safe);
+}
+
+void AAEAIController::SetTarget(UObject* Target)
+{
+	Blackboard->SetValueAsObject(TEXT("TargetActor"), Target);
+	Blackboard->SetValueAsEnum(TEXT("State"), 1);
 }

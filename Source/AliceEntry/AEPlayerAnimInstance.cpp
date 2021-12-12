@@ -28,14 +28,42 @@ FName UAEPlayerAnimInstance::GetAttackMontageSectionName(int32 Section)
 	return FName(*FString::Printf(TEXT("Attack%d"), Section));
 }
 
-void UAEPlayerAnimInstance::PlayRollAnim(bool bIsBack)
+void UAEPlayerAnimInstance::PlayRollAnim(FName Name)
 {
 	CHECK(!IsDead);
 	if (Montage_IsPlaying(RollMontage)) return;
 
 	Montage_Play(RollMontage, 1.0f);
-	if (bIsBack)
+	Montage_JumpToSection(Name, RollMontage);
+}
+
+void UAEPlayerAnimInstance::PlaySlideAnim()
+{
+	CHECK(!IsDead);
+	
+	Montage_Play(SlideMontage, 1.0f);
+}
+
+void UAEPlayerAnimInstance::PlayGrappleAnim(bool bIsAir)
+{
+	CHECK(!IsDead);
+
+	if (bIsAir)
 	{
-		Montage_JumpToSection(FName("Back"), RollMontage);
+		Montage_Play(GrappleAir);
 	}
+	else
+	{
+		Montage_Play(GrappleGround);
+	}
+
+}
+
+void UAEPlayerAnimInstance::PlaySkillAnim(FName Name)
+{
+	CHECK(!IsDead);
+	if (Montage_IsPlaying(SkillMontage)) return;
+
+	Montage_Play(SkillMontage, 1.0f);
+	Montage_JumpToSection(Name, SkillMontage);
 }
