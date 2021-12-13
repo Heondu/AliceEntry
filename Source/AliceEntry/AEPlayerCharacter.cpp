@@ -7,6 +7,7 @@
 //케이블 컴포넌트는 플러그인이라 모듈에 추가해야 함
 #include "CableComponent.h"
 #include "DrawDebugHelpers.h"
+#include "AEGameMode.h"
 
 AAEPlayerCharacter::AAEPlayerCharacter()
 {
@@ -56,7 +57,7 @@ AAEPlayerCharacter::AAEPlayerCharacter()
 	bIsAttacking = false;
 	AttackEndComboState();
 
-	DeadTimer = 5.0f;
+	DeadTimer = 0.5f;
 
 	bCanMove = true;
 	WalkSpeed = 200;
@@ -65,6 +66,8 @@ AAEPlayerCharacter::AAEPlayerCharacter()
 	bIsSprint = false;
 
 	EState = ECharacterState::Stopped;
+
+	RotationRate = 0.1f;
 }
 
 
@@ -90,9 +93,11 @@ void AAEPlayerCharacter::BeginPlay()
 	AnimInstance->OnRollEnd.AddLambda([this]() -> void {
 		bCanMove = true;
 		SetCanBeDamaged(true);
+		EState = ECharacterState::Stopped;
 		});
 	AnimInstance->OnSlideEnd.AddLambda([this]() -> void {
 		bCanMove = true;
+		EState = ECharacterState::Stopped;
 		});
 	AnimInstance->OnFlyingModeStart.AddLambda([this]() -> void {
 		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
@@ -101,8 +106,9 @@ void AAEPlayerCharacter::BeginPlay()
 		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 		});
 
-
 	RopeVisibility(false);
+
+	OriginMaterials = GetMesh()->GetMaterials();
 }
 
 void AAEPlayerCharacter::PostInitializeComponents()
@@ -143,6 +149,34 @@ void AAEPlayerCharacter::Tick(float DeltaTime)
 			EState = ECharacterState::Stopped;
 		}
 	}
+
+	if (bSmoothRotate)
+	{
+		FRotator Rotation = FMath::RInterpTo(GetActorRotation(), TargetRotator, DeltaTime, 20);
+		SetActorRotation(Rotation);
+	}
+
+	if (bIsDissolve)
+	{
+		TagPercent = FMath::FInterpTo(TagPercent, 1, DeltaTime, 2);
+
+		for (int i = 0; i < MaterialInstances.Num(); i++)
+		{
+			MaterialInstances[i]->SetScalarParameterValue(TEXT("Appearance"), TagPercent);
+			GetMesh()->SetMaterial(i, MaterialInstances[i]);
+		}
+	}
+
+	if (bIsAppearance)
+	{
+		TagPercent = FMath::FInterpTo(TagPercent, 0, DeltaTime, 2);
+
+		for (int i = 0; i < MaterialInstances.Num(); i++)
+		{
+			MaterialInstances[i]->SetScalarParameterValue(TEXT("Appearance"), TagPercent);
+			GetMesh()->SetMaterial(i, MaterialInstances[i]);
+		}
+	}
 }
 
 void AAEPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -169,6 +203,7 @@ void AAEPlayerCharacter::MoveForward(float AxisValue)
 	LastMovementInputVector.X = AxisValue;
 
 	if (!bCanMove) return;
+	if (bInGrapplingAnimation) return;
 	if (AxisValue == 0.0f) return;
 
 	const FRotator Rot = Controller->GetControlRotation();
@@ -183,6 +218,7 @@ void AAEPlayerCharacter::MoveRight(float AxisValue)
 	LastMovementInputVector.Y = AxisValue;
 
 	if (!bCanMove) return;
+	if (bInGrapplingAnimation) return;
 	if (AxisValue == 0.0f) return;
 
 	const FRotator Rot = Controller->GetControlRotation();
@@ -220,42 +256,45 @@ void AAEPlayerCharacter::Attack()
 
 void AAEPlayerCharacter::AttackCheck()
 {
-	FVector Location;
-	FRotator Rotation;
-	GetController()->GetPlayerViewPoint(Location, Rotation);
-	SetActorRotation(FRotator(0, Rotation.Yaw, 0));
+	FVector Direction = Camera->GetForwardVector();
+	Direction.Z = 0;
+	Direction.GetSafeNormal();
+	FVector End = GetActorLocation() + Direction * AttackRange;
+
+	LookAtCamera();
+	TargetRotator = FRotationMatrix::MakeFromX(End - GetActorLocation()).Rotator();
 
 	FHitResult HitResult;
 	FCollisionQueryParams Params(NAME_None, false, this);
 	bool bResult = GetWorld()->SweepSingleByChannel(
 		HitResult,
 		GetActorLocation(),
-		GetActorLocation() + GetActorForwardVector() * AttackRange,
+		End,
 		FQuat::Identity,
 		ECollisionChannel::ECC_GameTraceChannel3,
 		FCollisionShape::MakeSphere(AttackRadius),
 		Params
 	);
 
-#if ENABLE_DRAW_DEBUG
-	FVector TraceVec = GetActorForwardVector() * AttackRange;
-	FVector Center = GetActorLocation() + TraceVec * 0.5f;
-	float HalfHeight = AttackRange * 0.5f + AttackRadius;
-	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
-	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
-	float DebugLifeTime = 1.0f;
-
-	DrawDebugCapsule(
-		GetWorld(),
-		Center,
-		HalfHeight,
-		AttackRadius,
-		CapsuleRot,
-		DrawColor,
-		false,
-		DebugLifeTime
-	);
-#endif
+//#if ENABLE_DRAW_DEBUG
+//	FVector TraceVec = Direction * AttackRange;
+//	FVector Center = GetActorLocation() + TraceVec * 0.5f;
+//	float HalfHeight = AttackRange * 0.5f + AttackRadius;
+//	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
+//	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
+//	float DebugLifeTime = 1.0f;
+//
+//	DrawDebugCapsule(
+//		GetWorld(),
+//		Center,
+//		HalfHeight,
+//		AttackRadius,
+//		CapsuleRot,
+//		DrawColor,
+//		false,
+//		DebugLifeTime
+//	);
+//#endif
 
 	if (bResult)
 	{
@@ -329,8 +368,15 @@ float AAEPlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dam
 	if (Health <= 0.0f)
 	{
 		bIsDead = true;
+		bCanMove = false;
 		AnimInstance->SetDeadAnim();
 		SetActorEnableCollision(false);
+		EState = ECharacterState::Dead;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+
+		GetWorldTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda([this]() -> void {
+			Cast<AAEGameMode>(GetWorld()->GetAuthGameMode())->ShowGameOver();
+			}), DeadTimer, false);
 	}
 	else if (CanBeDamaged() && EState != ECharacterState::Grappling && EState != ECharacterState::Swing)
 	{
@@ -347,12 +393,57 @@ void AAEPlayerCharacter::CamShake()
 	UGameplayStatics::PlayWorldCameraShake(GetWorld(), ShakeAttack, UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->GetCameraLocation(), 0.0f, 1000.0f, 1.0f, false);
 }
 
-void AAEPlayerCharacter::Appearance()
+void AAEPlayerCharacter::LookAtCamera()
 {
+	bSmoothRotate = true;
+	FTimerHandle Timer = {};
+	GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateLambda([this]() -> void {
+		bSmoothRotate = false;
+		}), RotationRate, false);
 }
 
-void AAEPlayerCharacter::Dissolve()
+void AAEPlayerCharacter::Appearance(float Time)
 {
+	OriginMaterials = GetMesh()->GetMaterials();
+
+	for (int i = 0; i < TagMaterials.Num(); i++)
+	{
+		MaterialInstances.Add(UMaterialInstanceDynamic::Create(TagMaterials[i], this));
+	}
+
+	TagPercent = 1;
+	bIsAppearance = true;
+
+	FTimerHandle Timer = {};
+	GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateLambda([this]() -> void {
+		bIsAppearance = false;
+		for (int i = 0; i < OriginMaterials.Num(); i++)
+		{
+			GetMesh()->SetMaterial(i, OriginMaterials[i]);
+		}
+		}), Time, false);
+}
+
+void AAEPlayerCharacter::Dissolve(float Time)
+{
+	for (int i = 0; i < TagMaterials.Num(); i++)
+	{
+		MaterialInstances.Add(UMaterialInstanceDynamic::Create(TagMaterials[i], this));
+	}
+	
+	TArray<AActor*> Actors;
+	GetAttachedActors(Actors);
+	for (AActor* Actor : Actors)
+		Actor->Destroy();
+	SetActorEnableCollision(false);
+	TagPercent = 0;
+	bIsDissolve = true;
+	bCanMove = false;
+	
+	FTimerHandle Timer = {};
+	GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateLambda([this]() -> void {
+		Destroy();
+		}), Time, false);
 }
 
 void AAEPlayerCharacter::Sprint()
@@ -563,6 +654,7 @@ void AAEPlayerCharacter::ResetMovement()
 	CurrentGrapplePoint = NULL;
 	GetCharacterMovement()->GravityScale = 1.0f;
 	bInGrapplingAnimation = false;
+	EState = ECharacterState::Stopped;
 }
 
 void AAEPlayerCharacter::RopeVisibility(bool bVisible)
@@ -582,6 +674,8 @@ void AAEPlayerCharacter::MoveRope()
 
 void AAEPlayerCharacter::Swing()
 {
+	if (!bCanMove) return;
+
 	Hook->SetWorldLocation(HookPoint);
 
 	if (!GetCharacterMovement()->IsFalling()) return;
@@ -602,6 +696,7 @@ void AAEPlayerCharacter::Swing()
 
 void AAEPlayerCharacter::AttachGrapplingHook()
 {
+	if (!bCanMove) return;
 	if (!IsValid(GrapplePointRef)) return;
 	float Distance = (GetActorLocation() - GrapplePointRef->GetActorLocation()).Size();
 	if (Distance > GrappleThrowDistance) return;

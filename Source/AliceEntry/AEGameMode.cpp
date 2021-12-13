@@ -32,3 +32,11 @@ void AAEGameMode::ShowOptions()
 	PlayerRef->SetShowMouseCursor(true);
 	UGameplayStatics::SetGamePaused(GetWorld(), true);
 }
+
+void AAEGameMode::ShowGameOver()
+{
+	CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), GameOverWidget);
+	CurrentWidget->AddToViewport();
+	PlayerRef->SetShowMouseCursor(true);
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
+}

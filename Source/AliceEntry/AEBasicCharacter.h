@@ -26,6 +26,12 @@ public:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	bool bIsAttacking;
 
+	UPROPERTY(VisibleAnywhere)
+	bool bCanMove;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float Health;
+
 protected:
 	//클래스나 블루프린트를 받아오려면 TSubclassOf로 클래스를 명시해야 한다.
 	UPROPERTY(EditDefaultsOnly, Category = Weapon)
@@ -39,14 +45,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	float MaxHealth = 100;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	float Health;
-
 	UPROPERTY(EditAnywhere)
 	float Damage = 10;
-
-	UPROPERTY(VisibleAnywhere)
-	bool bCanMove;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool bIsDead;

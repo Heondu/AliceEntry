@@ -54,7 +54,6 @@ public:
 	void RopeVisibility(bool bVisible);
 	void MoveRope();
 
-
 	UFUNCTION()
 	void OnAttackMontageEnded();
 
@@ -63,8 +62,11 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
-	void Appearance();
-	void Dissolve();
+	void Appearance(float Time);
+	void Dissolve(float Time);
+
+	UPROPERTY(VisibleAnywhere)
+	TEnumAsByte<ECharacterState> EState;
 
 protected:
 	virtual void BeginPlay() override;
@@ -90,9 +92,7 @@ protected:
 	void ChangeFromSprintToWalk();
 	
 	void CamShake();
-
-	UPROPERTY(VisibleAnywhere)
-	TEnumAsByte<ECharacterState> EState;
+	void LookAtCamera();
 
 	UPROPERTY()
 	class UAEPlayerAnimInstance* AnimInstance;
@@ -215,4 +215,31 @@ protected:
 
 	UPROPERTY()
 	bool bIsSprint;
+
+	UPROPERTY()
+	bool bSmoothRotate;
+
+	UPROPERTY()
+	float RotationRate;
+
+	UPROPERTY()
+	FRotator TargetRotator;
+
+	UPROPERTY()
+	TArray<UMaterialInterface*> OriginMaterials;
+
+	UPROPERTY(EditDefaultsOnly, Category = Tag)
+	TArray<UMaterialInterface*> TagMaterials;
+
+	UPROPERTY()
+	TArray<UMaterialInstanceDynamic*> MaterialInstances;
+
+	UPROPERTY()
+	bool bIsDissolve;
+
+	UPROPERTY()
+	bool bIsAppearance;
+
+	UPROPERTY()
+	float TagPercent;
 };

@@ -19,6 +19,7 @@ class ALICEENTRY_API AAEPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
+	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
 private:
@@ -32,4 +33,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AAEBunnyCharacter> BunnyClass;
+
+	UPROPERTY()
+	float TagTime;
 };

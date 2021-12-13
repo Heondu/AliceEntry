@@ -6,6 +6,13 @@
 #include "AEAliceCharacter.h"
 #include "AEBunnyCharacter.h"
 
+void AAEPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	TagTime = 1;
+}
+
 void AAEPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -15,16 +22,19 @@ void AAEPlayerController::SetupInputComponent()
 
 void AAEPlayerController::ChangeCharacter()
 {
+	AAEPlayerCharacter* PlayerRef = Cast<AAEPlayerCharacter>(GetPawn());
+	if (PlayerRef->EState != ECharacterState::Stopped &&
+		PlayerRef->EState != ECharacterState::Walking &&
+		PlayerRef->EState != ECharacterState::Running) return;
+
+	float Health = PlayerRef->Health;
+
 	FVector Location = GetPawn()->GetActorLocation();
 	FRotator Rotation = GetPawn()->GetActorRotation();
 	FRotator NewControlRotation = GetControlRotation();
 
-	TArray<AActor*> Actors;
-	GetPawn()->GetAttachedActors(Actors);
-	for (AActor* Actor : Actors)
-		Actor->Destroy();
-	GetPawn()->Destroy();
-	
+	PlayerRef->Dissolve(TagTime);
+
 	AAEPlayerCharacter* NewCharacter;
 	
 	if (bFlag)
@@ -38,8 +48,11 @@ void AAEPlayerController::ChangeCharacter()
 	
 	CHECK(nullptr != NewCharacter);
 	
+	NewCharacter->Health = Health;
 	Possess(NewCharacter);
 	SetControlRotation(NewControlRotation);
+
+	NewCharacter->Appearance(TagTime);
 	
 	bFlag = !bFlag;
 }

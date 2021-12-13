@@ -14,6 +14,9 @@ class ALICEENTRY_API AAEGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
+public:
+	void ShowGameOver();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -31,6 +34,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UMG Game")
 	TSubclassOf<UUserWidget> OptionsWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UMG Game")
+	TSubclassOf<UUserWidget> GameOverWidget;
 
 	UPROPERTY()
 	APlayerController* PlayerRef;

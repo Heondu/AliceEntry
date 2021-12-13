@@ -78,9 +78,15 @@ void AAEAliceCharacter::Shoot()
 	FVector Location;
 	FRotator Rotation;
 	GetController()->GetPlayerViewPoint(Location, Rotation);
-	SetActorRotation(FRotator(0, Rotation.Yaw, 0));
-
 	FVector End = Location + Rotation.Vector() * MaxRange;
+
+	FVector Direction = Camera->GetForwardVector();
+	Direction.Z = 0;
+	Direction.GetSafeNormal();
+	FVector TargetEnd = GetActorLocation() + Direction * MaxRange;
+
+	LookAtCamera();
+	TargetRotator = FRotationMatrix::MakeFromX(TargetEnd - GetActorLocation()).Rotator();
 
 	FHitResult Hit;
 	FCollisionQueryParams CollisionParams;
