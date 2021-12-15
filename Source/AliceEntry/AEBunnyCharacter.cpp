@@ -68,7 +68,7 @@ void AAEBunnyCharacter::Attack()
 
 	if (bIsAttacking)
 	{
-		CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
+		if (!FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo)) return;
 		if (CanNextCombo)
 		{
 			IsComboInputOn = true;
@@ -96,6 +96,7 @@ void AAEBunnyCharacter::Skill1()
 	if (bInGrapplingAnimation) return;
 	if (bIsAttacking) return;
 
+	CurrentCombo = 0;
 	bIsAttacking = true;
 	AnimInstance->PlaySkillAnim("1");
 }
@@ -106,6 +107,7 @@ void AAEBunnyCharacter::Skill2()
 	if (bInGrapplingAnimation) return;
 	if (bIsAttacking) return;
 
+	CurrentCombo = 0;
 	bIsAttacking = true;
 	AnimInstance->PlaySkillAnim("2");
 }
@@ -116,6 +118,7 @@ void AAEBunnyCharacter::Skill3()
 	if (bInGrapplingAnimation) return;
 	if (bIsAttacking) return;
 
+	CurrentCombo = 0;
 	bIsAttacking = true;
 	AnimInstance->PlaySkillAnim("3");
 }

@@ -56,7 +56,7 @@ void AAEAliceCharacter::Attack()
 
 	if (bIsAttacking)
 	{
-		CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
+		if (!FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo)) return;
 		if (CanNextCombo)
 		{
 			IsComboInputOn = true;
@@ -112,6 +112,7 @@ void AAEAliceCharacter::Skill1()
 	if (bInGrapplingAnimation) return;
 	if (bIsAttacking) return;
 
+	CurrentCombo = 0;
 	bIsAttacking = true;
 	AnimInstance->PlaySkillAnim("1");
 }
@@ -122,6 +123,7 @@ void AAEAliceCharacter::Skill2()
 	if (bInGrapplingAnimation) return;
 	if (bIsAttacking) return;
 
+	CurrentCombo = 0;
 	bIsAttacking = true;
 	AnimInstance->PlaySkillAnim("2");
 }

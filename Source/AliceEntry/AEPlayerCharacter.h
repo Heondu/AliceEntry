@@ -82,6 +82,7 @@ protected:
 	void Swing();
 	void AttachGrapplingHook();
 	void DetachGrapplingHook();
+	void DetachGrapplingHookWhenSwing();
 	virtual void Attack();
 	void AttackCheck();
 	void Roll();
@@ -242,4 +243,13 @@ protected:
 
 	UPROPERTY()
 	float TagPercent;
+
+	UPROPERTY()
+	FTimerHandle SwingTimer;
+
+	UPROPERTY()
+	float SwingTime;
+
+	UPROPERTY()
+	FVector LastSwingDirection;
 };
