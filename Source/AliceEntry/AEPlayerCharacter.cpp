@@ -335,15 +335,17 @@ void AAEPlayerCharacter::Roll()
 	AttackEndComboState();
 	SetCanBeDamaged(false);
 
+	if (EState == ECharacterState::Stopped)
+	{
+		AnimInstance->PlayRollAnim("Backward");
+		return;
+	}
+
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	SetActorRotation(FRotationMatrix::MakeFromX(GetLastMovementInputVector()).Rotator());
 
-	if (EState == ECharacterState::Stopped)
-	{
-		AnimInstance->PlayRollAnim("Backward");
-	}
-	else if (EState == ECharacterState::Walking)
+	if (EState == ECharacterState::Walking)
 	{
 		AnimInstance->PlayRollAnim("Forward");
 	}
@@ -402,7 +404,7 @@ float AAEPlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dam
 			Cast<AAEGameMode>(GetWorld()->GetAuthGameMode())->ShowGameOver();
 			}), DeadTimer, false);
 	}
-	else if (CanBeDamaged() && EState != ECharacterState::Grappling && EState != ECharacterState::Swing)
+	else if (CanBeDamaged() && EState != ECharacterState::Grappling && EState != ECharacterState::Swing && bIsAttacking)
 	{
 		bCanMove = false;
 		bIsAttacking = false;
@@ -525,6 +527,7 @@ void AAEPlayerCharacter::Grapple()
 {
 	if (!bCanMove) return;
 	if (!IsValid(GrapplePointRef)) return;
+	if (!GrapplePointRef->bCanGrapple) return;
 	if (bGrapplingHookAttached)
 	{
 		DetachGrapplingHook();
@@ -533,12 +536,6 @@ void AAEPlayerCharacter::Grapple()
 	float Distance = (GetActorLocation() - GrapplePointRef->GetActorLocation()).Size();
 	if (Distance <= GrappleThrowDistance && CurrentGrapplePoint != GrapplePointRef)
 	{
-		//if (bMovingWithGrapple)
-		//{
-		//	FVector LaunchVelocity = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), GrapplingDestination) * 200.0f;
-		//	LaunchCharacter(LaunchVelocity, false, false);
-		//}
-
 		bInGrapplingAnimation = true;
 		bMovingWithGrapple = false;
 		CurrentGrapplePoint = GrapplePointRef;
@@ -617,32 +614,25 @@ void AAEPlayerCharacter::ActivateGrapplePoint()
 {
 	if (!IsValid(DetectedActor)) return;
 
-	TArray<AActor*> ActorsToIgnore;
 	FHitResult HitResult;
-
-	UKismetSystemLibrary::LineTraceSingle(
-		GetWorld(),
-		Camera->GetComponentLocation(),
-		DetectedActor->GetActorLocation(),
-		ETraceTypeQuery::TraceTypeQuery6,
-		false,
-		ActorsToIgnore,
-		EDrawDebugTrace::None,
-		HitResult,
-		true);
-
-	if (HitResult.GetActor() == DetectedActor)
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Camera->GetComponentLocation(), DetectedActor->GetActorLocation(), ECollisionChannel::ECC_Visibility))
 	{
-		if (DetectedActor != GrapplePointRef)
+		if (HitResult.GetActor() == DetectedActor)
 		{
+			if (DetectedActor != GrapplePointRef)
+			{
+				DeactivateGrapplePoint();
+				GrapplePointRef = Cast<AAEGrapplePoint>(DetectedActor);
+				GrapplePointRef->Activate(this, true);
+			}
+		}
+		else
+		{
+			LOG_S(Warning);
 			DeactivateGrapplePoint();
 			GrapplePointRef = Cast<AAEGrapplePoint>(DetectedActor);
-			GrapplePointRef->Activate(this);
+			GrapplePointRef->Activate(this, false);
 		}
-	}
-	else
-	{
-		DeactivateGrapplePoint();
 	}
 }
 
@@ -665,10 +655,8 @@ void AAEPlayerCharacter::GrapplingMovement()
 
 void AAEPlayerCharacter::StartGrapplingMovement()
 {
-	//GetCharacterMovement()->GravityScale = 0;
 	GetCharacterMovement()->StopMovementImmediately();
 	StartingPosition = GetActorLocation();
-	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Falling);
 	bMovingWithGrapple = true;
 }
 
@@ -753,9 +741,6 @@ void AAEPlayerCharacter::AttachGrapplingHook()
 		SetActorRotation(FRotator(0, Rotation.Yaw, 0));
 
 		LastSwingDirection = GetActorForwardVector();
-
-		//GetWorldTimerManager().ClearTimer(SwingTimer);
-		//GetWorldTimerManager().SetTimer(SwingTimer, this, &AAEPlayerCharacter::DetachGrapplingHook, SwingTime, false);
 	}
 }
 
@@ -764,10 +749,6 @@ void AAEPlayerCharacter::DetachGrapplingHook()
 	CurrentGrapplePoint = NULL;
 	bGrapplingHookAttached = false;
 	RopeVisibility(false);
-	//if (UGameplayStatics::GetTimeSeconds(GetWorld()) - AttachedTime <= GrapplingTiming)
-	//{
-	//	Grapple();
-	//}
 }
 
 void AAEPlayerCharacter::DetachGrapplingHookWhenSwing()

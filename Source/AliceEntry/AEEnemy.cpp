@@ -82,6 +82,8 @@ void AAEEnemy::Attack()
 
 void AAEEnemy::AttackCheck()
 {
+	if (bIsDead) return;
+
 	FHitResult HitResult;
 	FCollisionQueryParams Params(NAME_None, false, this);
 	bool bResult = GetWorld()->SweepSingleByChannel(
