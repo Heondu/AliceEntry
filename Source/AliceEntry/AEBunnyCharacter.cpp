@@ -3,13 +3,11 @@
 
 #include "AEBunnyCharacter.h"
 #include "AEPlayerAnimInstance.h"
+#include "DrawDebugHelpers.h"
 
 AAEBunnyCharacter::AAEBunnyCharacter()
 {
-	AttackRange = 200.0f;
-	AttackRadius = 100.0f;
-	AttackMoveForce = 800.0f;
-	MaxCombo = 3;
+
 }
 
 void AAEBunnyCharacter::BeginPlay()
@@ -19,6 +17,11 @@ void AAEBunnyCharacter::BeginPlay()
 	CHECK(nullptr != AnimInstance);
 	AnimInstance->OnAttackHitCheck.AddUObject(this, &AAEBunnyCharacter::AttackCheck);
 	AnimInstance->OnAttackMove.AddUObject(this, &AAEBunnyCharacter::AttackMove);
+
+	AttackRange = 200.0f;
+	AttackRadius = 150.0f;
+	AttackMoveForce = 800.0f;
+	MaxCombo = 3;
 }
 
 void AAEBunnyCharacter::PostInitializeComponents()
@@ -68,7 +71,7 @@ void AAEBunnyCharacter::Attack()
 
 	if (bIsAttacking)
 	{
-		CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
+		if (!FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo)) return;
 		if (CanNextCombo)
 		{
 			IsComboInputOn = true;
@@ -84,6 +87,75 @@ void AAEBunnyCharacter::Attack()
 	}
 }
 
+void AAEBunnyCharacter::AttackCheck()
+{
+	FVector Direction = Camera->GetForwardVector();
+	Direction.Z = 0;
+	Direction.GetSafeNormal();
+	FVector End = GetActorLocation() + Direction * AttackRange;
+
+	LookAtCamera();
+	TargetRotator = FRotationMatrix::MakeFromX(End - GetActorLocation()).Rotator();
+
+	TArray<FHitResult> HitResults;
+	FCollisionQueryParams Params(NAME_None, false, this);
+	bool bResult = GetWorld()->SweepMultiByChannel(
+		HitResults,
+		GetActorLocation() + GetActorForwardVector() * 100,
+		End,
+		FQuat::Identity,
+		ECollisionChannel::ECC_GameTraceChannel1,
+		FCollisionShape::MakeSphere(AttackRadius),
+		Params
+	);
+
+	//#if ENABLE_DRAW_DEBUG
+	//	FVector TraceVec = Direction * AttackRange;
+	//	FVector Center = GetActorLocation() + GetActorForwardVector() * 100 + TraceVec * 0.5f;
+	//	float HalfHeight = AttackRange * 0.5f + AttackRadius;
+	//	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
+	//	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
+	//	float DebugLifeTime = 1.0f;
+	//
+	//	DrawDebugCapsule(
+	//		GetWorld(),
+	//		Center,
+	//		HalfHeight,
+	//		AttackRadius,
+	//		CapsuleRot,
+	//		DrawColor,
+	//		false,
+	//		DebugLifeTime
+	//	);
+	//#endif
+
+	if (bResult)
+	{
+		LOG(Warning, TEXT("%d"), HitResults.Num());
+		for (FHitResult HitResult : HitResults)
+		{
+			if (!HitResult.Actor.IsValid())
+			{
+				continue;
+			}
+			if (HitResult.GetActor()->ActorHasTag("Enemy"))
+			{
+				FDamageEvent DamageEvent;
+				HitResult.Actor->TakeDamage(Damage, DamageEvent, GetController(), this);
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, HitResult.Actor->GetActorLocation(), HitResult.Actor->GetActorRotation(), FVector(1), true, true, ENCPoolMethod::AutoRelease, true);
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitEffectSound, HitResult.Actor->GetActorLocation());
+			}
+			else if (HitResult.GetActor()->ActorHasTag("PhysicsObject"))
+			{
+				if (HitResult.GetActor()->IsRootComponentMovable()) {
+					UStaticMeshComponent* MeshRootComp = Cast<UStaticMeshComponent>(HitResult.GetActor()->GetRootComponent());
+					MeshRootComp->AddForce(Camera->GetForwardVector() * 100000 * MeshRootComp->GetMass());
+				}
+			}
+		}
+	}
+}
+
 void AAEBunnyCharacter::AttackMove()
 {
 	GetCharacterMovement()->AddImpulse(GetActorForwardVector() * AttackMoveForce, true);
@@ -96,6 +168,7 @@ void AAEBunnyCharacter::Skill1()
 	if (bInGrapplingAnimation) return;
 	if (bIsAttacking) return;
 
+	CurrentCombo = 0;
 	bIsAttacking = true;
 	AnimInstance->PlaySkillAnim("1");
 }
@@ -106,6 +179,7 @@ void AAEBunnyCharacter::Skill2()
 	if (bInGrapplingAnimation) return;
 	if (bIsAttacking) return;
 
+	CurrentCombo = 0;
 	bIsAttacking = true;
 	AnimInstance->PlaySkillAnim("2");
 }
@@ -116,6 +190,7 @@ void AAEBunnyCharacter::Skill3()
 	if (bInGrapplingAnimation) return;
 	if (bIsAttacking) return;
 
+	CurrentCombo = 0;
 	bIsAttacking = true;
 	AnimInstance->PlaySkillAnim("3");
 }

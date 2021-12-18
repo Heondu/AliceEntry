@@ -6,7 +6,6 @@
 #include "Kismet/KismetMathLibrary.h"
 //케이블 컴포넌트는 플러그인이라 모듈에 추가해야 함
 #include "CableComponent.h"
-#include "DrawDebugHelpers.h"
 #include "AEGameMode.h"
 
 AAEPlayerCharacter::AAEPlayerCharacter()
@@ -68,6 +67,8 @@ AAEPlayerCharacter::AAEPlayerCharacter()
 	EState = ECharacterState::Stopped;
 
 	RotationRate = 0.1f;
+
+	SwingTime = 1.5f;
 }
 
 
@@ -148,6 +149,14 @@ void AAEPlayerCharacter::Tick(float DeltaTime)
 		{
 			EState = ECharacterState::Stopped;
 		}
+
+		bUseControllerRotationYaw = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+	}
+	else
+	{
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
 	}
 
 	if (bSmoothRotate)
@@ -177,6 +186,13 @@ void AAEPlayerCharacter::Tick(float DeltaTime)
 			GetMesh()->SetMaterial(i, MaterialInstances[i]);
 		}
 	}
+
+	if (bIsSprint)
+	{
+		if (LastMovementInputVector.X < 0) GetCharacterMovement()->MaxWalkSpeed = 400;
+		else GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	}
+	else GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
 void AAEPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -191,7 +207,7 @@ void AAEPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &AAEBasicCharacter::Jump);
 	PlayerInputComponent->BindAction("Grapple", EInputEvent::IE_Pressed, this, &AAEPlayerCharacter::AttachGrapplingHook);
-	PlayerInputComponent->BindAction("Grapple", EInputEvent::IE_Released, this, &AAEPlayerCharacter::DetachGrapplingHook);
+	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &AAEPlayerCharacter::DetachGrapplingHookWhenSwing);
 	PlayerInputComponent->BindAction("Roll", EInputEvent::IE_Pressed, this, &AAEPlayerCharacter::Roll);
 	PlayerInputComponent->BindAction("SprintOrSlide", EInputEvent::IE_Pressed, this, &AAEPlayerCharacter::Sprint);
 	PlayerInputComponent->BindAction("SprintOrSlide", EInputEvent::IE_Released, this, &AAEPlayerCharacter::ChangeFromSprintToWalk);
@@ -254,64 +270,9 @@ void AAEPlayerCharacter::Attack()
 {
 }
 
-void AAEPlayerCharacter::AttackCheck()
-{
-	FVector Direction = Camera->GetForwardVector();
-	Direction.Z = 0;
-	Direction.GetSafeNormal();
-	FVector End = GetActorLocation() + Direction * AttackRange;
-
-	LookAtCamera();
-	TargetRotator = FRotationMatrix::MakeFromX(End - GetActorLocation()).Rotator();
-
-	FHitResult HitResult;
-	FCollisionQueryParams Params(NAME_None, false, this);
-	bool bResult = GetWorld()->SweepSingleByChannel(
-		HitResult,
-		GetActorLocation(),
-		End,
-		FQuat::Identity,
-		ECollisionChannel::ECC_GameTraceChannel3,
-		FCollisionShape::MakeSphere(AttackRadius),
-		Params
-	);
-
-//#if ENABLE_DRAW_DEBUG
-//	FVector TraceVec = Direction * AttackRange;
-//	FVector Center = GetActorLocation() + TraceVec * 0.5f;
-//	float HalfHeight = AttackRange * 0.5f + AttackRadius;
-//	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
-//	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
-//	float DebugLifeTime = 1.0f;
-//
-//	DrawDebugCapsule(
-//		GetWorld(),
-//		Center,
-//		HalfHeight,
-//		AttackRadius,
-//		CapsuleRot,
-//		DrawColor,
-//		false,
-//		DebugLifeTime
-//	);
-//#endif
-
-	if (bResult)
-	{
-		if (HitResult.Actor.IsValid() && HitResult.GetActor()->ActorHasTag("Enemy"))
-		{
-			LOG(Warning, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
-
-			FDamageEvent DamageEvent;
-			HitResult.Actor->TakeDamage(Damage, DamageEvent, GetController(), this);
-		}
-	}
-}
-
 void AAEPlayerCharacter::Roll()
 {
 	if (!bCanMove) return;
-	if (bIsAttacking) return;
 	if (GetCharacterMovement()->IsFalling()) return;
 
 	bCanMove = false;
@@ -319,7 +280,17 @@ void AAEPlayerCharacter::Roll()
 	AttackEndComboState();
 	SetCanBeDamaged(false);
 
-	if (EState == ECharacterState::Walking || EState == ECharacterState::Stopped)
+	if (EState == ECharacterState::Stopped)
+	{
+		AnimInstance->PlayRollAnim("Backward");
+		return;
+	}
+
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	SetActorRotation(FRotationMatrix::MakeFromX(GetLastMovementInputVector()).Rotator());
+
+	if (EState == ECharacterState::Walking)
 	{
 		AnimInstance->PlayRollAnim("Forward");
 	}
@@ -378,7 +349,7 @@ float AAEPlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dam
 			Cast<AAEGameMode>(GetWorld()->GetAuthGameMode())->ShowGameOver();
 			}), DeadTimer, false);
 	}
-	else if (CanBeDamaged() && EState != ECharacterState::Grappling && EState != ECharacterState::Swing)
+	else if (CanBeDamaged() && EState != ECharacterState::Grappling && EState != ECharacterState::Swing && !bIsAttacking)
 	{
 		bCanMove = false;
 		bIsAttacking = false;
@@ -452,6 +423,12 @@ void AAEPlayerCharacter::Sprint()
 	bIsSprint = true;
 }
 
+void AAEPlayerCharacter::ChangeFromSprintToWalk()
+{
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	bIsSprint = false;
+}
+
 void AAEPlayerCharacter::Slide()
 {
 	bCanMove = false;
@@ -491,16 +468,11 @@ float AAEPlayerCharacter::GetGroundAngle()
 	return Angle;
 }
 
-void AAEPlayerCharacter::ChangeFromSprintToWalk()
-{
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-	bIsSprint = false;
-}
-
 void AAEPlayerCharacter::Grapple()
 {
 	if (!bCanMove) return;
 	if (!IsValid(GrapplePointRef)) return;
+	if (!GrapplePointRef->bCanGrapple) return;
 	if (bGrapplingHookAttached)
 	{
 		DetachGrapplingHook();
@@ -509,12 +481,6 @@ void AAEPlayerCharacter::Grapple()
 	float Distance = (GetActorLocation() - GrapplePointRef->GetActorLocation()).Size();
 	if (Distance <= GrappleThrowDistance && CurrentGrapplePoint != GrapplePointRef)
 	{
-		//if (bMovingWithGrapple)
-		//{
-		//	FVector LaunchVelocity = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), GrapplingDestination) * 200.0f;
-		//	LaunchCharacter(LaunchVelocity, false, false);
-		//}
-
 		bInGrapplingAnimation = true;
 		bMovingWithGrapple = false;
 		CurrentGrapplePoint = GrapplePointRef;
@@ -593,32 +559,24 @@ void AAEPlayerCharacter::ActivateGrapplePoint()
 {
 	if (!IsValid(DetectedActor)) return;
 
-	TArray<AActor*> ActorsToIgnore;
 	FHitResult HitResult;
-
-	UKismetSystemLibrary::LineTraceSingle(
-		GetWorld(),
-		Camera->GetComponentLocation(),
-		DetectedActor->GetActorLocation(),
-		ETraceTypeQuery::TraceTypeQuery6,
-		false,
-		ActorsToIgnore,
-		EDrawDebugTrace::None,
-		HitResult,
-		true);
-
-	if (HitResult.GetActor() == DetectedActor)
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Camera->GetComponentLocation(), DetectedActor->GetActorLocation(), ECollisionChannel::ECC_Visibility))
 	{
-		if (DetectedActor != GrapplePointRef)
+		if (HitResult.GetActor() == DetectedActor)
+		{
+			if (DetectedActor != GrapplePointRef)
+			{
+				DeactivateGrapplePoint();
+				GrapplePointRef = Cast<AAEGrapplePoint>(DetectedActor);
+				GrapplePointRef->Activate(this, true);
+			}
+		}
+		else
 		{
 			DeactivateGrapplePoint();
 			GrapplePointRef = Cast<AAEGrapplePoint>(DetectedActor);
-			GrapplePointRef->Activate(this);
+			GrapplePointRef->Activate(this, false);
 		}
-	}
-	else
-	{
-		DeactivateGrapplePoint();
 	}
 }
 
@@ -641,10 +599,8 @@ void AAEPlayerCharacter::GrapplingMovement()
 
 void AAEPlayerCharacter::StartGrapplingMovement()
 {
-	//GetCharacterMovement()->GravityScale = 0;
 	GetCharacterMovement()->StopMovementImmediately();
 	StartingPosition = GetActorLocation();
-	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Falling);
 	bMovingWithGrapple = true;
 }
 
@@ -678,7 +634,11 @@ void AAEPlayerCharacter::Swing()
 
 	Hook->SetWorldLocation(HookPoint);
 
-	if (!GetCharacterMovement()->IsFalling()) return;
+	if (!GetCharacterMovement()->IsFalling())
+	{
+		LastSwingDirection = GetActorForwardVector();
+		return;
+	}
 
 	FVector Distance = GetActorLocation() - HookPoint;
 	float Dot = FVector::DotProduct(Distance, GetVelocity());
@@ -701,23 +661,43 @@ void AAEPlayerCharacter::AttachGrapplingHook()
 	float Distance = (GetActorLocation() - GrapplePointRef->GetActorLocation()).Size();
 	if (Distance > GrappleThrowDistance) return;
 
-	AttachedTime = UGameplayStatics::GetTimeSeconds(GetWorld());
-	bGrapplingHookAttached = true;
-	HookPoint = GrapplePointRef->GetActorLocation();
-	RopeVisibility(true);
+	if (GrapplePointRef->Tags[0] == "Grapple")
+	{
+		Grapple();
+	}
+	else if (GrapplePointRef->Tags[0] == "Swing")
+	{
+		if (CurrentGrapplePoint == GrapplePointRef)
+		{
+			DetachGrapplingHook();
+			return;
+		}
 
-	FVector Location;
-	FRotator Rotation;
-	GetController()->GetPlayerViewPoint(Location, Rotation);
-	SetActorRotation(FRotator(0, Rotation.Yaw, 0));
+		AttachedTime = UGameplayStatics::GetTimeSeconds(GetWorld());
+		bGrapplingHookAttached = true;
+		HookPoint = GrapplePointRef->GetActorLocation();
+		RopeVisibility(true);
+		CurrentGrapplePoint = GrapplePointRef;
+
+		FVector Location;
+		FRotator Rotation;
+		GetController()->GetPlayerViewPoint(Location, Rotation);
+		SetActorRotation(FRotator(0, Rotation.Yaw, 0));
+
+		LastSwingDirection = GetActorForwardVector();
+	}
 }
 
 void AAEPlayerCharacter::DetachGrapplingHook()
 {
+	CurrentGrapplePoint = NULL;
 	bGrapplingHookAttached = false;
 	RopeVisibility(false);
-	if (UGameplayStatics::GetTimeSeconds(GetWorld()) - AttachedTime <= GrapplingTiming)
-	{
-		Grapple();
-	}
+}
+
+void AAEPlayerCharacter::DetachGrapplingHookWhenSwing()
+{
+	if (!GetCharacterMovement()->IsFalling()) return;
+
+	DetachGrapplingHook();
 }

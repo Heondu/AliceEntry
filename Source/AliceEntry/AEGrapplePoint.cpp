@@ -42,13 +42,14 @@ void AAEGrapplePoint::Tick(float DeltaTime)
 	}
 }
 
-void AAEGrapplePoint::Activate(class AAEPlayerCharacter* Player)
+void AAEGrapplePoint::Activate(class AAEPlayerCharacter* Player, bool _bCanGrapple)
 {
 	if (!bUsed)
 	{
 		PlayerRef = Player;
 		bActive = true;
 		WidgetRef->SetVisibility(ESlateVisibility::Visible);
+		bCanGrapple = _bCanGrapple;
 	}
 }
 
@@ -69,7 +70,14 @@ void AAEGrapplePoint::CheckDistanceFromPlayer()
 	float Value = (PlayerRef->GetActorLocation() - GetActorLocation()).Size();
 	float DesiredSize = UKismetMathLibrary::MapRangeClamped(Value, PlayerRef->GrappleThrowDistance, PlayerRef->DetectionRadius, MaxImageSize, MinImageSize);
 	Image->SetBrushSize(FVector2D(DesiredSize, DesiredSize));
-	Image->SetColorAndOpacity(DesiredSize == MaxImageSize ? FLinearColor(1.0f, 0.0f, 0.3f) : FLinearColor::White);//FLinearColor(1.0f, 0.0f, 0.3f));
+	if (bCanGrapple)
+	{
+		Image->SetColorAndOpacity(DesiredSize == MaxImageSize ? FLinearColor(1.0f, 0.0f, 0.3f) : FLinearColor::White);
+	}
+	else
+	{
+		Image->SetColorAndOpacity(FLinearColor::White);
+	}
 }
 
 void AAEGrapplePoint::Use()
@@ -82,6 +90,7 @@ void AAEGrapplePoint::Use()
 void AAEGrapplePoint::Reactive()
 {
 	bUsed = false;
+	bCanGrapple = false;
 }
 
 void AAEGrapplePoint::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

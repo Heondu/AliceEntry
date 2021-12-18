@@ -4,6 +4,7 @@
 #include "AEAliceCharacter.h"
 #include "AEGun.h"
 #include "AEPlayerAnimInstance.h"
+#include "DrawDebugHelpers.h"
 
 AAEAliceCharacter::AAEAliceCharacter()
 {
@@ -56,7 +57,7 @@ void AAEAliceCharacter::Attack()
 
 	if (bIsAttacking)
 	{
-		CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
+		if (!FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo)) return;
 		if (CanNextCombo)
 		{
 			IsComboInputOn = true;
@@ -70,6 +71,74 @@ void AAEAliceCharacter::Attack()
 		AnimInstance->JumpToAttackMontageSection(CurrentCombo);
 		Shoot();
 		bIsAttacking = true;
+	}
+}
+
+void AAEAliceCharacter::AttackCheck()
+{
+	FVector Direction = Camera->GetForwardVector();
+	Direction.Z = 0;
+	Direction.GetSafeNormal();
+	FVector End = GetActorLocation() + Direction * AttackRange;
+
+	LookAtCamera();
+	TargetRotator = FRotationMatrix::MakeFromX(End - GetActorLocation()).Rotator();
+
+	TArray<FHitResult> HitResults;
+	FCollisionQueryParams Params(NAME_None, false, this);
+	bool bResult = GetWorld()->SweepMultiByChannel(
+		HitResults,
+		GetActorLocation() + GetActorForwardVector() * 100,
+		End,
+		FQuat::Identity,
+		ECollisionChannel::ECC_GameTraceChannel1,
+		FCollisionShape::MakeSphere(AttackRadius),
+		Params
+	);
+
+//#if ENABLE_DRAW_DEBUG
+//	FVector TraceVec = Direction * AttackRange;
+//	FVector Center = GetActorLocation() + GetActorForwardVector() * 100 + TraceVec * 0.5f;
+//	float HalfHeight = AttackRange * 0.5f + AttackRadius;
+//	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
+//	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
+//	float DebugLifeTime = 1.0f;
+//
+//	DrawDebugCapsule(
+//		GetWorld(),
+//		Center,
+//		HalfHeight,
+//		AttackRadius,
+//		CapsuleRot,
+//		DrawColor,
+//		false,
+//		DebugLifeTime
+//	);
+//#endif
+
+	if (bResult)
+	{
+		LOG(Warning, TEXT("%d"), HitResults.Num());
+		for (FHitResult HitResult : HitResults)
+		{
+			if (!HitResult.Actor.IsValid())
+			{
+				continue;
+			}
+			LOG(Warning, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
+			if (HitResult.GetActor()->ActorHasTag("Enemy"))
+			{
+				FDamageEvent DamageEvent;
+				HitResult.Actor->TakeDamage(Damage, DamageEvent, GetController(), this);
+			}
+			else if (HitResult.GetActor()->ActorHasTag("PhysicsObject"))
+			{
+				if (HitResult.GetActor()->IsRootComponentMovable()) {
+					UStaticMeshComponent* MeshRootComp = Cast<UStaticMeshComponent>(HitResult.GetActor()->GetRootComponent());
+					MeshRootComp->AddForce(Camera->GetForwardVector() * 100000 * MeshRootComp->GetMass());
+				}
+			}
+		}
 	}
 }
 
@@ -98,10 +167,18 @@ void AAEAliceCharacter::Shoot()
 		FVector ShotDirection = -Rotation.Vector();
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), GunL->ImpactEffect, Hit.Location, ShotDirection.Rotation());
 		AActor* HitActor = Hit.GetActor();
-		if (nullptr != HitActor && HitActor->ActorHasTag("Enemy"))
+		if (nullptr == HitActor) return;
+		if (HitActor->ActorHasTag("Enemy"))
 		{
 			FPointDamageEvent DamageEvent(Damage, Hit, ShotDirection, nullptr);
 			HitActor->TakeDamage(Damage, DamageEvent, GetController(), this);
+		}
+		else if (HitActor->ActorHasTag("PhysicsObject"))
+		{
+			if (HitActor->IsRootComponentMovable()) {
+				UStaticMeshComponent* MeshRootComp = Cast<UStaticMeshComponent>(HitActor->GetRootComponent());
+				MeshRootComp->AddForce(Camera->GetForwardVector() * 100000 * MeshRootComp->GetMass());
+			}
 		}
 	}
 }
@@ -112,6 +189,7 @@ void AAEAliceCharacter::Skill1()
 	if (bInGrapplingAnimation) return;
 	if (bIsAttacking) return;
 
+	CurrentCombo = 0;
 	bIsAttacking = true;
 	AnimInstance->PlaySkillAnim("1");
 }
@@ -122,6 +200,7 @@ void AAEAliceCharacter::Skill2()
 	if (bInGrapplingAnimation) return;
 	if (bIsAttacking) return;
 
+	CurrentCombo = 0;
 	bIsAttacking = true;
 	AnimInstance->PlaySkillAnim("2");
 }

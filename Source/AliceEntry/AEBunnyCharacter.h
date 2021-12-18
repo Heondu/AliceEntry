@@ -4,6 +4,7 @@
 
 #include "AliceEntry.h"
 #include "AEPlayerCharacter.h"
+#include "NiagaraFunctionLibrary.h"
 #include "AEBunnyCharacter.generated.h"
 
 /**
@@ -28,6 +29,7 @@ protected:
 	virtual void MoveRight(float AxisValue) override;
 	virtual void Jump() override;
 	virtual void Attack() override;
+	void AttackCheck();
 
 private:
 	void AttackMove();
@@ -37,4 +39,10 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	float AttackMoveForce;
+	
+	UPROPERTY(EditDefaultsOnly, Category = Effect)
+	class UNiagaraSystem* HitEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = Sound)
+	USoundBase* HitEffectSound;
 };

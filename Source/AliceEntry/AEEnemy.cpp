@@ -82,6 +82,8 @@ void AAEEnemy::Attack()
 
 void AAEEnemy::AttackCheck()
 {
+	if (bIsDead) return;
+
 	FHitResult HitResult;
 	FCollisionQueryParams Params(NAME_None, false, this);
 	bool bResult = GetWorld()->SweepSingleByChannel(
@@ -147,10 +149,6 @@ float AAEEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 		AnimInstance->SetDeadAnim();
 		SetActorEnableCollision(false);
 		GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda([this]() -> void {
-			TArray<AActor*> Actors;
-			GetAttachedActors(Actors);
-			for (AActor* Actor : Actors)
-				Actor->Destroy();
 			Destroy();
 			}), DeadTimer, false);
 	}

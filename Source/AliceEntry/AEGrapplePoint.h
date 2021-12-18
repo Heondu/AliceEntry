@@ -24,11 +24,14 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void Activate(class AAEPlayerCharacter* Player);
+	void Activate(class AAEPlayerCharacter* Player, bool bCanGrapple);
 	void Deactivate();
 	void CheckDistanceFromPlayer();
 	void Use();
 	void Reactive();
+
+	UPROPERTY()
+	bool bCanGrapple;
 
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Category = Grapple)

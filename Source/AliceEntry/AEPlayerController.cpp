@@ -23,14 +23,16 @@ void AAEPlayerController::SetupInputComponent()
 void AAEPlayerController::ChangeCharacter()
 {
 	AAEPlayerCharacter* PlayerRef = Cast<AAEPlayerCharacter>(GetPawn());
+	if (nullptr == PlayerRef) return;
+
 	if (PlayerRef->EState != ECharacterState::Stopped &&
 		PlayerRef->EState != ECharacterState::Walking &&
 		PlayerRef->EState != ECharacterState::Running) return;
 
 	float Health = PlayerRef->Health;
 
-	FVector Location = GetPawn()->GetActorLocation();
-	FRotator Rotation = GetPawn()->GetActorRotation();
+	FVector Location = PlayerRef->GetActorLocation();
+	FRotator Rotation = PlayerRef->GetActorRotation();
 	FRotator NewControlRotation = GetControlRotation();
 
 	PlayerRef->Dissolve(TagTime);

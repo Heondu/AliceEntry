@@ -27,6 +27,7 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 	virtual void Attack() override;
+	void AttackCheck();
 
 private:
 	void Shoot();

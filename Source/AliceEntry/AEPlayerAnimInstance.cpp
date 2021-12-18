@@ -31,7 +31,6 @@ FName UAEPlayerAnimInstance::GetAttackMontageSectionName(int32 Section)
 void UAEPlayerAnimInstance::PlayRollAnim(FName Name)
 {
 	CHECK(!IsDead);
-	if (Montage_IsPlaying(RollMontage)) return;
 
 	Montage_Play(RollMontage, 1.0f);
 	Montage_JumpToSection(Name, RollMontage);
@@ -62,7 +61,6 @@ void UAEPlayerAnimInstance::PlayGrappleAnim(bool bIsAir)
 void UAEPlayerAnimInstance::PlaySkillAnim(FName Name)
 {
 	CHECK(!IsDead);
-	if (Montage_IsPlaying(SkillMontage)) return;
 
 	Montage_Play(SkillMontage, 1.0f);
 	Montage_JumpToSection(Name, SkillMontage);
