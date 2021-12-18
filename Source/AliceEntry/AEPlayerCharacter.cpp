@@ -349,7 +349,11 @@ float AAEPlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dam
 			Cast<AAEGameMode>(GetWorld()->GetAuthGameMode())->ShowGameOver();
 			}), DeadTimer, false);
 	}
+<<<<<<< HEAD
 	else if (CanBeDamaged() && EState != ECharacterState::Grappling && EState != ECharacterState::Swing && !bIsAttacking)
+=======
+	else if (CanBeDamaged() && EState != ECharacterState::Grappling && EState != ECharacterState::Swing && bIsAttacking)
+>>>>>>> 6b6995d5117792d99e71e96698a33ce0f6d083fd
 	{
 		bCanMove = false;
 		bIsAttacking = false;
@@ -563,6 +567,18 @@ void AAEPlayerCharacter::ActivateGrapplePoint()
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Camera->GetComponentLocation(), DetectedActor->GetActorLocation(), ECollisionChannel::ECC_Visibility))
 	{
 		if (HitResult.GetActor() == DetectedActor)
+<<<<<<< HEAD
+		{
+			if (DetectedActor != GrapplePointRef)
+			{
+				DeactivateGrapplePoint();
+				GrapplePointRef = Cast<AAEGrapplePoint>(DetectedActor);
+				GrapplePointRef->Activate(this, true);
+			}
+		}
+		else
+=======
+>>>>>>> 6b6995d5117792d99e71e96698a33ce0f6d083fd
 		{
 			if (DetectedActor != GrapplePointRef)
 			{
@@ -573,6 +589,7 @@ void AAEPlayerCharacter::ActivateGrapplePoint()
 		}
 		else
 		{
+			LOG_S(Warning);
 			DeactivateGrapplePoint();
 			GrapplePointRef = Cast<AAEGrapplePoint>(DetectedActor);
 			GrapplePointRef->Activate(this, false);
