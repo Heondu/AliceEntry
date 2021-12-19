@@ -4,6 +4,7 @@
 
 #include "AliceEntry.h"
 #include "GameFramework/GameModeBase.h"
+#include "Components/Image.h"
 #include "AEGameMode.generated.h"
 
 /**
@@ -16,6 +17,7 @@ class ALICEENTRY_API AAEGameMode : public AGameModeBase
 
 public:
 	void ShowGameOver();
+	UImage* GetCrosshairImage();
 
 protected:
 	virtual void BeginPlay() override;
@@ -24,7 +26,7 @@ protected:
 	void ShowOptions();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UMG Game")
-	UUserWidget* CurrentWidget;
+	UUserWidget* HUDWidgetRef;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UMG Game")
 	UUserWidget* OptionsWidgetRef;
@@ -40,4 +42,7 @@ protected:
 
 	UPROPERTY()
 	APlayerController* PlayerRef;
+
+	UPROPERTY()
+	UImage* Crosshair;
 };

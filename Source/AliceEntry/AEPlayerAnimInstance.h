@@ -11,8 +11,6 @@ DECLARE_MULTICAST_DELEGATE(FOnRollEndDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnSlideEndDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnLeftShotDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnRightShotDelegate);
-DECLARE_MULTICAST_DELEGATE(FOnFlyingModeStartDelegate);
-DECLARE_MULTICAST_DELEGATE(FOnFlyingModeEndDelegate);
 
 /**
  * 
@@ -35,8 +33,6 @@ public:
 	FOnSlideEndDelegate OnSlideEnd;
 	FOnLeftShotDelegate OnLeftShot;
 	FOnRightShotDelegate OnRightShot;
-	FOnFlyingModeStartDelegate OnFlyingModeStart;
-	FOnFlyingModeEndDelegate OnFlyingModeEnd;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Anim, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* GrappleAir;
@@ -84,10 +80,4 @@ private:
 
 	UFUNCTION()
 	void AnimNotify_RightShot() { OnRightShot.Broadcast(); }
-
-	UFUNCTION()
-	void AnimNotify_FlyingModeStart() { OnFlyingModeStart.Broadcast(); }
-
-	UFUNCTION()
-	void AnimNotify_FlyingModeEnd() { OnFlyingModeEnd.Broadcast(); }
 };

@@ -44,17 +44,35 @@ void AAEBunnyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 void AAEBunnyCharacter::MoveForward(float AxisValue)
 {
-	if (bIsAttacking) return;
+	LastMovementInputVectorWorld.X = AxisValue;
 
+	if (!bCanMove) return;
+	if (bInGrapplingAnimation) return;
+	//if (AxisValue == 0.0f) return;
 
-	AAEPlayerCharacter::MoveForward(AxisValue);
+	const FRotator Rot = Controller->GetControlRotation();
+	const FRotator YawRot(0, Rot.Yaw, 0);
+	const FVector Direction = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
+	ControlVector += Direction * AxisValue;
+	if (!bIsAttacking) AddMovementInput(Direction, AxisValue);
+	EState = bIsSprint ? ECharacterState::Running : ECharacterState::Walking;
+
 }
 
 void AAEBunnyCharacter::MoveRight(float AxisValue)
 {
-	if (bIsAttacking) return;
+	LastMovementInputVectorWorld.Y = AxisValue;
 
-	AAEPlayerCharacter::MoveRight(AxisValue);
+	if (!bCanMove) return;
+	if (bInGrapplingAnimation) return;
+	//if (AxisValue == 0.0f) return;
+
+	const FRotator Rot = Controller->GetControlRotation();
+	const FRotator YawRot(0, Rot.Yaw, 0);
+	const FVector Direction = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
+	ControlVector += Direction * AxisValue;
+	if (!bIsAttacking) AddMovementInput(Direction, AxisValue);
+	EState = bIsSprint ? ECharacterState::Running : ECharacterState::Walking;
 }
 
 void AAEBunnyCharacter::Jump()

@@ -92,19 +92,11 @@ void AAEPlayerCharacter::BeginPlay()
 		}
 		});
 	AnimInstance->OnRollEnd.AddLambda([this]() -> void {
-		bCanMove = true;
-		SetCanBeDamaged(true);
-		EState = ECharacterState::Stopped;
+		RollEndState();
 		});
 	AnimInstance->OnSlideEnd.AddLambda([this]() -> void {
 		bCanMove = true;
 		EState = ECharacterState::Stopped;
-		});
-	AnimInstance->OnFlyingModeStart.AddLambda([this]() -> void {
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
-		});
-	AnimInstance->OnFlyingModeEnd.AddLambda([this]() -> void {
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 		});
 
 	RopeVisibility(false);
@@ -145,7 +137,7 @@ void AAEPlayerCharacter::Tick(float DeltaTime)
 
 	if (EState == ECharacterState::Walking || EState == ECharacterState::Running)
 	{
-		if (LastMovementInputVector == FVector::ZeroVector)
+		if (LastMovementInputVectorWorld == FVector::ZeroVector)
 		{
 			EState = ECharacterState::Stopped;
 		}
@@ -189,10 +181,13 @@ void AAEPlayerCharacter::Tick(float DeltaTime)
 
 	if (bIsSprint)
 	{
-		if (LastMovementInputVector.X < 0) GetCharacterMovement()->MaxWalkSpeed = 400;
+		if (LastMovementInputVectorWorld.X < 0) GetCharacterMovement()->MaxWalkSpeed = 400;
 		else GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 	}
 	else GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+
+	LastMovementInputVectorLocal = ControlVector;
+	ControlVector = FVector::ZeroVector;
 }
 
 void AAEPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -207,8 +202,8 @@ void AAEPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &AAEBasicCharacter::Jump);
 	PlayerInputComponent->BindAction("Grapple", EInputEvent::IE_Pressed, this, &AAEPlayerCharacter::AttachGrapplingHook);
-	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &AAEPlayerCharacter::DetachGrapplingHookWhenSwing);
 	PlayerInputComponent->BindAction("Roll", EInputEvent::IE_Pressed, this, &AAEPlayerCharacter::Roll);
+	PlayerInputComponent->BindAction("Roll", EInputEvent::IE_Pressed, this, &AAEPlayerCharacter::DetachGrapplingHookWhenSwing);
 	PlayerInputComponent->BindAction("SprintOrSlide", EInputEvent::IE_Pressed, this, &AAEPlayerCharacter::Sprint);
 	PlayerInputComponent->BindAction("SprintOrSlide", EInputEvent::IE_Released, this, &AAEPlayerCharacter::ChangeFromSprintToWalk);
 	PlayerInputComponent->BindAction("Attack", EInputEvent::IE_Pressed, this, &AAEPlayerCharacter::Attack);
@@ -216,31 +211,34 @@ void AAEPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 void AAEPlayerCharacter::MoveForward(float AxisValue)
 {
-	LastMovementInputVector.X = AxisValue;
+	LastMovementInputVectorWorld.X = AxisValue;
 
 	if (!bCanMove) return;
 	if (bInGrapplingAnimation) return;
-	if (AxisValue == 0.0f) return;
 
 	const FRotator Rot = Controller->GetControlRotation();
 	const FRotator YawRot(0, Rot.Yaw, 0);
 	const FVector Direction = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
+	ControlVector += Direction * AxisValue;
 	AddMovementInput(Direction, AxisValue);
+
+	if (AxisValue == 0.0f) return;
 	EState = bIsSprint ? ECharacterState::Running : ECharacterState::Walking;
 }
 
 void AAEPlayerCharacter::MoveRight(float AxisValue)
 {
-	LastMovementInputVector.Y = AxisValue;
+	LastMovementInputVectorWorld.Y = AxisValue;
 
 	if (!bCanMove) return;
 	if (bInGrapplingAnimation) return;
-	if (AxisValue == 0.0f) return;
-
 	const FRotator Rot = Controller->GetControlRotation();
 	const FRotator YawRot(0, Rot.Yaw, 0);
 	const FVector Direction = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
+	ControlVector += Direction * AxisValue;
 	AddMovementInput(Direction, AxisValue);
+
+	if (AxisValue == 0.0f) return;
 	EState = bIsSprint ? ECharacterState::Running : ECharacterState::Walking;
 }
 
@@ -274,32 +272,47 @@ void AAEPlayerCharacter::Roll()
 {
 	if (!bCanMove) return;
 	if (GetCharacterMovement()->IsFalling()) return;
+	if (EState == ECharacterState::Grappling) return;
 
+	if (LastMovementInputVectorWorld == FVector::ZeroVector)
+	{
+		RollStartState();
+		AnimInstance->PlayRollAnim("Backward");
+		return;
+	}
+	else
+	{
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		SetActorRotation(FRotationMatrix::MakeFromX(LastMovementInputVectorLocal).Rotator());
+
+		if (EState == ECharacterState::Walking)
+		{
+			RollStartState();
+			AnimInstance->PlayRollAnim("Forward");
+		}
+		else if (EState == ECharacterState::Running)
+		{
+			RollStartState();
+			AnimInstance->PlayRollAnim("Sprint");
+		}
+	}
+}
+
+void AAEPlayerCharacter::RollStartState()
+{
 	bCanMove = false;
 	bIsAttacking = false;
 	AttackEndComboState();
 	SetCanBeDamaged(false);
-
-	if (EState == ECharacterState::Stopped)
-	{
-		AnimInstance->PlayRollAnim("Backward");
-		return;
-	}
-
-	bUseControllerRotationYaw = false;
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-	SetActorRotation(FRotationMatrix::MakeFromX(GetLastMovementInputVector()).Rotator());
-
-	if (EState == ECharacterState::Walking)
-	{
-		AnimInstance->PlayRollAnim("Forward");
-	}
-	else if (EState == ECharacterState::Running)
-	{
-		AnimInstance->PlayRollAnim("Sprint");
-	}
-
 	EState = ECharacterState::Rolling;
+}
+
+void AAEPlayerCharacter::RollEndState()
+{
+	bCanMove = true;
+	SetCanBeDamaged(true);
+	EState = ECharacterState::Stopped;
 }
 
 void AAEPlayerCharacter::OnAttackMontageEnded()
@@ -349,11 +362,7 @@ float AAEPlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dam
 			Cast<AAEGameMode>(GetWorld()->GetAuthGameMode())->ShowGameOver();
 			}), DeadTimer, false);
 	}
-<<<<<<< HEAD
 	else if (CanBeDamaged() && EState != ECharacterState::Grappling && EState != ECharacterState::Swing && !bIsAttacking)
-=======
-	else if (CanBeDamaged() && EState != ECharacterState::Grappling && EState != ECharacterState::Swing && bIsAttacking)
->>>>>>> 6b6995d5117792d99e71e96698a33ce0f6d083fd
 	{
 		bCanMove = false;
 		bIsAttacking = false;
@@ -410,7 +419,6 @@ void AAEPlayerCharacter::Dissolve(float Time)
 	GetAttachedActors(Actors);
 	for (AActor* Actor : Actors)
 		Actor->Destroy();
-	SetActorEnableCollision(false);
 	TagPercent = 0;
 	bIsDissolve = true;
 	bCanMove = false;
@@ -567,18 +575,6 @@ void AAEPlayerCharacter::ActivateGrapplePoint()
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Camera->GetComponentLocation(), DetectedActor->GetActorLocation(), ECollisionChannel::ECC_Visibility))
 	{
 		if (HitResult.GetActor() == DetectedActor)
-<<<<<<< HEAD
-		{
-			if (DetectedActor != GrapplePointRef)
-			{
-				DeactivateGrapplePoint();
-				GrapplePointRef = Cast<AAEGrapplePoint>(DetectedActor);
-				GrapplePointRef->Activate(this, true);
-			}
-		}
-		else
-=======
->>>>>>> 6b6995d5117792d99e71e96698a33ce0f6d083fd
 		{
 			if (DetectedActor != GrapplePointRef)
 			{
@@ -589,7 +585,6 @@ void AAEPlayerCharacter::ActivateGrapplePoint()
 		}
 		else
 		{
-			LOG_S(Warning);
 			DeactivateGrapplePoint();
 			GrapplePointRef = Cast<AAEGrapplePoint>(DetectedActor);
 			GrapplePointRef->Activate(this, false);
@@ -618,6 +613,7 @@ void AAEPlayerCharacter::StartGrapplingMovement()
 {
 	GetCharacterMovement()->StopMovementImmediately();
 	StartingPosition = GetActorLocation();
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Falling);
 	bMovingWithGrapple = true;
 }
 
@@ -716,5 +712,8 @@ void AAEPlayerCharacter::DetachGrapplingHookWhenSwing()
 {
 	if (!GetCharacterMovement()->IsFalling()) return;
 
-	DetachGrapplingHook();
+	if (EState == ECharacterState::Swing)
+	{
+		DetachGrapplingHook();
+	}
 }

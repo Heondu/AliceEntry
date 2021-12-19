@@ -3,13 +3,15 @@
 
 #include "AEGameMode.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/WidgetComponent.h"
+#include "Blueprint/WidgetTree.h"
 
 void AAEGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), HUDWidget);
-	CurrentWidget->AddToViewport();
+	HUDWidgetRef = CreateWidget<UUserWidget>(GetWorld(), HUDWidget);
+	HUDWidgetRef->AddToViewport();
 
 	OptionsWidgetRef = CreateWidget<UUserWidget>(GetWorld(), OptionsWidget);
 	OptionsWidgetRef->AddToViewport();
@@ -17,6 +19,8 @@ void AAEGameMode::BeginPlay()
 
 	PlayerRef = GetWorld()->GetFirstPlayerController();
 	PlayerRef->InputComponent->BindAction("Options", IE_Pressed, this, &AAEGameMode::ShowOptions);
+
+	Crosshair = HUDWidgetRef->WidgetTree->FindWidget<UImage>("Image_Crosshair");
 }
 
 void AAEGameMode::ShowOptions()
@@ -35,8 +39,13 @@ void AAEGameMode::ShowOptions()
 
 void AAEGameMode::ShowGameOver()
 {
-	CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), GameOverWidget);
+	UUserWidget* CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), GameOverWidget);
 	CurrentWidget->AddToViewport();
 	PlayerRef->SetShowMouseCursor(true);
 	UGameplayStatics::SetGamePaused(GetWorld(), true);
+}
+
+UImage* AAEGameMode::GetCrosshairImage()
+{
+	return Crosshair;
 }

@@ -6,6 +6,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Image.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "AEPlayerCharacter.h"
 
 // Sets default values
 AAEGrapplePoint::AAEGrapplePoint()

@@ -6,6 +6,7 @@
 #include "AEBasicCharacter.h"
 #include "AEGrapplePoint.h"
 #include "GameFramework/Character.h"
+#include "NiagaraFunctionLibrary.h"
 #include "AEPlayerCharacter.generated.h"
 
 UENUM()
@@ -60,6 +61,9 @@ public:
 	void AttackStartComboState();
 	void AttackEndComboState();
 
+	void RollStartState();
+	void RollEndState();
+
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	void Appearance(float Time);
@@ -101,7 +105,13 @@ protected:
 	float LookRate;
 
 	UPROPERTY()
-	FVector LastMovementInputVector;
+	FVector LastMovementInputVectorWorld;
+
+	UPROPERTY()
+	FVector LastMovementInputVectorLocal;
+
+	UPROPERTY()
+	FVector ControlVector;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	bool CanNextCombo;
@@ -251,4 +261,7 @@ protected:
 
 	UPROPERTY()
 	FVector LastSwingDirection;
+
+	UPROPERTY(EditDefaultsOnly, Category = Effect)
+	class UNiagaraSystem* HitEffect;
 };

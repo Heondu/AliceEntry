@@ -5,11 +5,13 @@
 #include "AEGun.h"
 #include "AEPlayerAnimInstance.h"
 #include "DrawDebugHelpers.h"
+#include "Components/Image.h"
+#include "AEGameMode.h"
 
 AAEAliceCharacter::AAEAliceCharacter()
 {
 	AttackRange = 200.0f;
-	AttackRadius = 50.0f;
+	AttackRadius = 100.0f;
 	MaxCombo = 2;
 }
 
@@ -40,6 +42,45 @@ void AAEAliceCharacter::BeginPlay()
 void AAEAliceCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+}
+
+void AAEAliceCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (nullptr == GetController()) return;
+	AAEGameMode* GameMode = Cast<AAEGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (nullptr == GameMode) return;
+	UImage* Image = GameMode->GetCrosshairImage();
+	if (nullptr == Image) return;
+
+	FVector Location;
+	FRotator Rotation;
+	GetController()->GetPlayerViewPoint(Location, Rotation);
+	FVector End = Location + Rotation.Vector() * MaxRange;
+
+	FHitResult Hit;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+	bool bSuccess = GetWorld()->LineTraceSingleByChannel(Hit, Location, End, ECollisionChannel::ECC_GameTraceChannel1, CollisionParams);
+	if (bSuccess)
+	{
+		FVector ShotDirection = -Rotation.Vector();
+		AActor* HitActor = Hit.GetActor();
+
+		if (nullptr != HitActor && HitActor->ActorHasTag("Enemy"))
+		{
+			Image->SetColorAndOpacity(FLinearColor(1.0f, 0.0f, 0.3f));
+		}
+		else
+		{
+			Image->SetColorAndOpacity(FLinearColor::White);
+		}
+	}
+	else
+	{
+		Image->SetColorAndOpacity(FLinearColor::White);
+	}
 }
 
 void AAEAliceCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -130,6 +171,7 @@ void AAEAliceCharacter::AttackCheck()
 			{
 				FDamageEvent DamageEvent;
 				HitResult.Actor->TakeDamage(Damage, DamageEvent, GetController(), this);
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, HitResult.Actor->GetActorLocation(), HitResult.Actor->GetActorRotation(), FVector(1), true, true, ENCPoolMethod::AutoRelease, true);
 			}
 			else if (HitResult.GetActor()->ActorHasTag("PhysicsObject"))
 			{

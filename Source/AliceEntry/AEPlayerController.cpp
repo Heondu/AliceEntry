@@ -35,10 +35,9 @@ void AAEPlayerController::ChangeCharacter()
 	FRotator Rotation = PlayerRef->GetActorRotation();
 	FRotator NewControlRotation = GetControlRotation();
 
-	PlayerRef->Dissolve(TagTime);
+	PlayerRef->SetActorEnableCollision(false);
 
 	AAEPlayerCharacter* NewCharacter;
-	
 	if (bFlag)
 	{
 		NewCharacter = GetWorld()->SpawnActor<AAEAliceCharacter>(AliceClass, Location, Rotation);
@@ -48,8 +47,13 @@ void AAEPlayerController::ChangeCharacter()
 		NewCharacter = GetWorld()->SpawnActor<AAEBunnyCharacter>(BunnyClass, Location, Rotation);
 	}
 	
-	CHECK(nullptr != NewCharacter);
+	if (nullptr == NewCharacter)
+	{
+		PlayerRef->SetActorEnableCollision(true);
+		return;
+	}
 	
+	PlayerRef->Dissolve(TagTime);
 	NewCharacter->Health = Health;
 	Possess(NewCharacter);
 	SetControlRotation(NewControlRotation);
